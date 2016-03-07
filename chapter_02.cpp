@@ -3,6 +3,7 @@
 #include <type_traits>
 
 
+////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct add_const_ref
         : std::conditional<
@@ -24,6 +25,7 @@ TEST_CASE("2-0", "[tmp]")
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename SourceType, typename TargetType>
 struct replace_type
 {
@@ -86,5 +88,18 @@ TEST_CASE("2-1", "[tmp]")
             >(),
             ""
     );
+    static_assert(
+            is_same<
+                    long & (*) (long &, long &),
+                    replace_type_t<char & (*) (char &, char &), char &, long &>
+            >(),
+            ""
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+TEST_CASE("2-2", "[tmp]")
+{
+
 }
 
