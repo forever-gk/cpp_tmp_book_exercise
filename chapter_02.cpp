@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <type_traits>
+#include <cassert>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,8 +99,32 @@ TEST_CASE("2-1", "[tmp]")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+template <typename Target, typename Source>
+inline Target polymorphic_downcast(Source * x)
+{
+    static_assert(std::is_pointer<Target>(), "Target should be pointer type.");
+    assert(dynamic_cast<Target>(x) != nullptr);
+    return static_cast<Target>(x);
+}
+
+template <typename Target, typename Source>
+inline Target polymorphic_downcast(Source & x)
+{
+    static_assert(std::is_reference<Target>(), "Target should be reference type.");
+    assert(dynamic_cast<std::add_pointer_t<Target>>(&x) != nullptr);
+    return static_cast<Target>(x);
+}
+
 TEST_CASE("2-2", "[tmp]")
 {
+    struct A { virtual ~A() { } };
+    struct B : A { };
 
+    B b;
+    A * a_ptr = &b;
+    B * b_ptr = polymorphic_downcast<B *>(a_ptr);
+
+    A & a_ref = b;
+    B & b_ref = polymorphic_downcast<B &>(a_ref);
 }
 
