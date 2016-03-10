@@ -11,7 +11,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(SOURCE_FILES main.cpp chapter_02.cpp)
+set(SOURCE_FILES main.cpp chapter_02.cpp chapter_03.cpp)
 
 add_executable(cpp_tmp_book_exercise ${SOURCE_FILES})
 
