@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <cassert>
+#include <array>
 #include <iostream>
 
 
@@ -232,5 +233,199 @@ TEST_CASE("2-3", "[tmp]")
     REQUIRE("int *[]" == type_descriptor<int * []>().to_string());
     REQUIRE("int *[][3]" == type_descriptor<int * [][3]>().to_string());
     REQUIRE("int *[][3][4]" == type_descriptor<int * [][3][4]>().to_string());
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+template <std::size_t... i>
+using array_extents_t = std::integer_sequence<std::size_t, i...>;
+
+
+namespace Detail
+{
+    template <typename ArrayExtentsSequence, typename T>
+    struct AllExtentsImpl;
+
+    template <std::size_t... i, typename T>
+    struct AllExtentsImpl<array_extents_t<i...>, T>
+    {
+        using type = array_extents_t<i...>;
+    };
+
+    template <std::size_t... i, typename T, std::size_t N>
+    struct AllExtentsImpl<array_extents_t<i...>, T[N]> : AllExtentsImpl<array_extents_t<i..., N>, T>
+    { };
+} // namespace Detail
+
+
+template <typename T>
+struct AllExtents
+{
+    static_assert(std::is_array<T>(), "T should be an array.");
+};
+
+template <typename T>
+struct AllExtents<T[]> : Detail::AllExtentsImpl<array_extents_t<0>, T>
+{ };
+
+template <typename T, std::size_t N>
+struct AllExtents<T[N]> : Detail::AllExtentsImpl<array_extents_t<N>, T>
+{ };
+
+
+template <typename T>
+using AllExtentsT = typename AllExtents<T>::type;
+
+
+namespace Detail
+{
+    template <std::size_t... i>
+    constexpr auto allExtentsImpl(array_extents_t<i...>)
+    {
+        return std::array<std::size_t, sizeof...(i)>{ i... };
+    }
+} // namespace Detail
+
+template <typename T>
+constexpr auto allExtents()
+{
+    return Detail::allExtentsImpl(AllExtentsT<T>());
+}
+
+
+template <typename Derived>
+struct type_desc_base
+{
+    operator std::string ()
+    {
+        return static_cast<Derived *>(this)->to_string();
+    }
+};
+
+
+template <typename T>
+struct type_desc : type_desc_base<type_desc<T>>
+{
+    std::string to_string() const
+    {
+        return name_of<T>::value;
+    }
+};
+
+template <typename T>
+struct type_desc<T const> : type_desc_base<type_desc<T const>>
+{
+    std::string to_string() const
+    {
+        return type_desc<T>().to_string() + " const";
+    }
+};
+
+template <typename T>
+struct type_desc<T volatile> : type_desc_base<type_desc<T volatile>>
+{
+    std::string to_string() const
+    {
+        return type_desc<T>().to_string() + " volatile";
+    }
+};
+
+template <typename T>
+struct type_desc<T *> : type_desc_base<type_desc<T *>>
+{
+    std::string to_string() const
+    {
+        return type_desc<T>().to_string() + " *";
+    }
+};
+
+template <typename T>
+struct type_desc<T &> : type_desc_base<type_desc<T &>>
+{
+    std::string to_string() const
+    {
+        return type_desc<T>().to_string() + " &";
+    }
+};
+
+template <typename T>
+struct type_desc<T &&> : type_desc_base<type_desc<T &&>>
+{
+    std::string to_string() const
+    {
+        return type_desc<T>().to_string() + " &&";
+    }
+};
+
+template <typename T>
+struct type_desc<T[]> : type_desc_base<type_desc<T[]>>
+{
+    std::string to_string() const
+    {
+        std::string s = type_desc<std::remove_all_extents_t<T>>();
+        for (auto i : allExtents<T[]>()) {
+            s += "[";
+            if (i != 0) {
+                s += std::to_string(i);
+            }
+            s += "]";
+        }
+        return s;
+    }
+};
+
+template <typename T, std::size_t N>
+struct type_desc<T[N]> : type_desc_base<type_desc<T[N]>>
+{
+    std::string to_string() const
+    {
+        std::string s = type_desc<std::remove_all_extents_t<T>>();
+        for (auto i : allExtents<T[N]>()) {
+            s += "[";
+            if (i != 0) {
+                s += std::to_string(i);
+            }
+            s += "]";
+        }
+        return s;
+    }
+};
+
+
+TEST_CASE("2-4", "[tmp]")
+{
+    // NOTE: Compile error.
+    //          The implicit std::string conversion operator is not a viable candidate for the overload resolution.
+    //REQUIRE("int" == type_desc<int>());
+
+    REQUIRE("int" == type_desc<int>().to_string());
+
+    std::string s = type_desc<int>();
+    REQUIRE("int" == s);
+
+    REQUIRE("char *" == type_desc<char *>().to_string());
+    REQUIRE("char * *" == type_desc<char **>().to_string());
+    REQUIRE("char * const *" == type_desc<char * const *>().to_string());
+    REQUIRE("long int const *" == type_desc<long const *>().to_string());
+    REQUIRE("char &" == type_desc<char &>().to_string());
+    REQUIRE("char &&" == type_desc<char &&>().to_string());
+
+    static_assert(std::extent<int [3]>() == 3, "");
+
+    static_assert(std::rank<int * []>() == 1, "");
+    static_assert(std::extent<int * [], std::rank<int * []>::value>() == 0, "");
+    static_assert(std::is_same<int *, std::remove_extent_t<int * []>>(), "");
+
+    static_assert(std::rank<int * [][3]>() == 2, "");
+    static_assert(std::extent<int * [][3], std::rank<int * [][3]>::value>() == 0, "");
+    static_assert(std::extent<int * [][3], 1>() == 3, "");
+    static_assert(std::extent<int * [][3], 2>() == 0, "");
+    static_assert(std::is_same<int * [3], std::remove_extent_t<int * [][3]>>(), "");
+
+    REQUIRE("int[]" == type_desc<int []>().to_string());
+    REQUIRE("int[3]" == type_desc<int [3]>().to_string());
+    REQUIRE("int *[]" == type_desc<int * []>().to_string());
+    REQUIRE("int *[][3]" == type_desc<int * [][3]>().to_string());
+    REQUIRE("int *[][3][4]" == type_desc<int * [][3][4]>().to_string());
 }
 
