@@ -159,6 +159,9 @@ public:
         if (std::is_pointer<T>()) {
             return type_descriptor<std::remove_pointer_t<T>>().to_string() + " *";
         }
+        if (std::is_rvalue_reference<T>()) {
+            return type_descriptor<std::remove_reference_t<T>>().to_string() + " &&";
+        }
         if (std::is_reference<T>()) {
             return type_descriptor<std::remove_reference_t<T>>().to_string() + " &";
         }
@@ -209,6 +212,8 @@ TEST_CASE("2-3", "[tmp]")
     REQUIRE("char * *" == type_descriptor<char **>().to_string());
     REQUIRE("char * const *" == type_descriptor<char * const *>().to_string());
     REQUIRE("long int const *" == type_descriptor<long const *>().to_string());
+    REQUIRE("char &" == type_descriptor<char &>().to_string());
+    REQUIRE("char &&" == type_descriptor<char &&>().to_string());
 
     static_assert(std::extent<int [3]>() == 3, "");
 
