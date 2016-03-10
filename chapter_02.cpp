@@ -429,3 +429,120 @@ TEST_CASE("2-4", "[tmp]")
     REQUIRE("int *[][3][4]" == type_desc<int * [][3][4]>().to_string());
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename Derived>
+struct type_eng_desc_base
+{
+    operator std::string ()
+    {
+        return static_cast<Derived *>(this)->to_string();
+    }
+};
+
+
+template <typename T>
+struct type_eng_desc : type_eng_desc_base<type_eng_desc<T>>
+{
+    std::string to_string() const
+    {
+        return name_of<T>::value;
+    }
+};
+
+template <typename T>
+struct type_eng_desc<T const> : type_eng_desc_base<type_eng_desc<T const>>
+{
+    std::string to_string() const
+    {
+        return "const " + type_eng_desc<T>().to_string();
+    }
+};
+
+template <typename T>
+struct type_eng_desc<T volatile> : type_eng_desc_base<type_eng_desc<T volatile>>
+{
+    std::string to_string() const
+    {
+        return "volatile " + type_eng_desc<T>().to_string();
+    }
+};
+
+template <typename T>
+struct type_eng_desc<T *> : type_eng_desc_base<type_eng_desc<T *>>
+{
+    std::string to_string() const
+    {
+        return "pointer to " + type_eng_desc<T>().to_string();
+    }
+};
+
+template <typename T>
+struct type_eng_desc<T &> : type_eng_desc_base<type_eng_desc<T &>>
+{
+    std::string to_string() const
+    {
+        return "reference to " + type_eng_desc<T>().to_string();
+    }
+};
+
+template <typename T>
+struct type_eng_desc<T &&> : type_eng_desc_base<type_eng_desc<T &&>>
+{
+    std::string to_string() const
+    {
+        return "rvalue reference to " + type_eng_desc<T>().to_string();
+    }
+};
+
+template <typename T>
+struct type_eng_desc<T[]> : type_eng_desc_base<type_eng_desc<T[]>>
+{
+    std::string to_string() const
+    {
+        return "array of " + type_eng_desc<std::remove_all_extents_t<T>>().to_string();
+    }
+};
+
+template <typename T, std::size_t N>
+struct type_eng_desc<T[N]> : type_eng_desc_base<type_eng_desc<T[N]>>
+{
+    std::string to_string() const
+    {
+        return "array of " + type_eng_desc<std::remove_all_extents_t<T>>().to_string();
+    }
+};
+
+template <typename R, typename... Args>
+struct type_eng_desc<R(Args...)> : type_eng_desc_base<R(Args...)>
+{
+    std::string to_string() const
+    {
+        return "function returning " + type_eng_desc<R>().to_string();
+    }
+};
+
+template <typename R, typename... Args>
+struct type_eng_desc<R (&) (Args...)> : type_eng_desc_base<R (&) (Args...)>
+{
+    std::string to_string() const
+    {
+        return "reference to function returning " + type_eng_desc<R>().to_string();
+    }
+};
+
+template <typename R, typename... Args>
+struct type_eng_desc<R (*) (Args...)> : type_eng_desc_base<R (*) (Args...)>
+{
+    std::string to_string() const
+    {
+        return "pointer to function returning " + type_eng_desc<R>().to_string();
+    }
+};
+
+
+TEST_CASE("2-5", "[tmp]")
+{
+    REQUIRE("array of pointer to function returning pointer to char" == type_eng_desc<char * (* [])()>().to_string());
+}
+
