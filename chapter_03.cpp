@@ -9,9 +9,27 @@ namespace mpl = boost::mpl;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+template <unsigned long N>
+struct binary
+{
+    static_assert(N % 10 == 1 || N % 10 == 0, "N should have only '1' or '0'.");
+
+    static unsigned const value = binary<N/10>::value * 2 + N % 10;
+};
+
+template <>
+struct binary<0>
+{
+    static unsigned const value = 0;
+};
+
+
 TEST_CASE("3-0", "[tmp]")
 {
+    static_assert(10 == binary<1010>::value, "");
 
+    // expected compile error.
+    //static_assert(binary<1919>::value > 0, "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
