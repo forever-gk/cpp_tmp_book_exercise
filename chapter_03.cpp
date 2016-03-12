@@ -5,9 +5,9 @@
 #include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/plus.hpp>
+#include <boost/mpl/multiplies.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/mpl/equal.hpp>
-
 
 namespace mpl = boost::mpl;
 
@@ -48,6 +48,20 @@ TEST_CASE("3-1", "[tmp]")
                             >::type;
 
     static_assert(mpl::equal<transformed_t, mpl::vector_c<int, 2, 3, 4>>(), "");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+TEST_CASE("3-2", "[tmp]")
+{
+    using namespace mpl::placeholders;
+
+    using transformed_t = mpl::transform<
+                                mpl::vector_c<int, 1, 2, 3>,
+                                mpl::multiplies<_1, _1>
+                            >::type;
+
+    static_assert(mpl::equal<transformed_t, mpl::vector_c<int, 1, 4, 9>>(), "");
 }
 
 
