@@ -136,13 +136,16 @@ namespace dimension_analysis
 
 
     template<typename T, typename Dimensions>
-    class quantity {
+    class quantity
+    {
     public:
         explicit quantity(T x)
-                : m_value(x) { }
+                : m_value(x)
+        { }
 
     public:
-        T value() const {
+        T value() const
+        {
             return m_value;
         }
 
