@@ -2,12 +2,14 @@
 
 #include <type_traits>
 
+#include <boost/mpl/apply.hpp>
 #include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/transform.hpp>
-#include <boost/mpl/plus.hpp>
-#include <boost/mpl/multiplies.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/mpl/equal.hpp>
+#include <boost/mpl/plus.hpp>
+#include <boost/mpl/multiplies.hpp>
+
 
 namespace mpl = boost::mpl;
 
@@ -62,6 +64,32 @@ TEST_CASE("3-2", "[tmp]")
                             >::type;
 
     static_assert(mpl::equal<transformed_t, mpl::vector_c<int, 1, 4, 9>>(), "");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename f, typename x>
+struct twice
+        : mpl::apply<f, typename mpl::apply<f, x>::type>
+{ };
+
+
+template <typename T>
+class quad_pointer
+{
+private:
+    using add_ptr_t = std::add_pointer<mpl::placeholders::_>;
+
+    using double_pointer_t = typename twice<add_ptr_t, T>::type;
+
+public:
+    using type = typename twice<add_ptr_t, double_pointer_t>::type;
+};
+
+
+TEST_CASE("3-3", "[tmp]")
+{
+    static_assert(std::is_same<int ****, typename quad_pointer<int>::type>(), "");
 }
 
 
