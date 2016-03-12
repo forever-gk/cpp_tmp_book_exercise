@@ -94,6 +94,29 @@ TEST_CASE("3-3", "[tmp]")
 
 
 ////////////////////////////////////////////////////////////////////////////////
+struct add_ptr
+{
+    template <typename T>
+    struct apply : std::add_pointer<T>
+    { };
+};
+
+
+TEST_CASE("3-4", "[tmp]")
+{
+    using namespace mpl::placeholders;
+
+    static_assert(
+            std::is_same<
+                    int ****,
+                    typename twice<twice<add_ptr, _>, int>::type
+            >(),
+            ""
+    );
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 namespace dimension_analysis
 {
     using mass                  = mpl::vector_c<int, 1, 0, 0, 0, 0, 0, 0>;
