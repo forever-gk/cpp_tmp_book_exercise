@@ -3,6 +3,10 @@
 #include <type_traits>
 
 #include <boost/mpl/vector_c.hpp>
+#include <boost/mpl/transform.hpp>
+#include <boost/mpl/plus.hpp>
+#include <boost/mpl/placeholders.hpp>
+#include <boost/mpl/equal.hpp>
 
 
 namespace mpl = boost::mpl;
@@ -34,17 +38,22 @@ TEST_CASE("3-0", "[tmp]")
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
 TEST_CASE("3-1", "[tmp]")
 {
+    using namespace mpl::placeholders;
 
+    using transformed_t = mpl::transform<
+                                mpl::vector_c<int, 1, 2, 3>,
+                                mpl::plus<_, mpl::int_<1>>
+                            >::type;
+
+    static_assert(mpl::equal<transformed_t, mpl::vector_c<int, 2, 3, 4>>(), "");
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace dimension_analysis {
+namespace dimension_analysis
+{
     using mass                  = mpl::vector_c<int, 1, 0, 0, 0, 0, 0, 0>;
     using length                = mpl::vector_c<int, 0, 1, 0, 0, 0, 0, 0>;
     using time                  = mpl::vector_c<int, 0, 0, 1, 0, 0, 0, 0>;
