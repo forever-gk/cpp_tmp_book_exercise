@@ -32,6 +32,17 @@ TEST_CASE("3-0", "[tmp]")
     //static_assert(binary<1919>::value > 0, "");
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+TEST_CASE("3-1", "[tmp]")
+{
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 using mass                  = mpl::vector_c<int, 1, 0, 0, 0, 0, 0, 0>;
 using length                = mpl::vector_c<int, 0, 1, 0, 0, 0, 0, 0>;
@@ -39,7 +50,7 @@ using time_                 = mpl::vector_c<int, 0, 0, 1, 0, 0, 0, 0>;
 using charge                = mpl::vector_c<int, 0, 0, 0, 1, 0, 0, 0>;
 using temperature           = mpl::vector_c<int, 0, 0, 0, 0, 1, 0, 0>;
 using intensity             = mpl::vector_c<int, 0, 0, 0, 0, 0, 1, 0>;
-using amount_of_substane    = mpl::vector_c<int, 0, 0, 0, 0, 0, 0, 1>;
+using amount_of_substance   = mpl::vector_c<int, 0, 0, 0, 0, 0, 0, 1>;
 
 using velocity              = mpl::vector_c<int, 0, 1, -1, 0, 0, 0, 0>; // l/t
 using acceleration          = mpl::vector_c<int, 0, 1, -2, 0, 0, 0, 0>; // l/(t^2)
