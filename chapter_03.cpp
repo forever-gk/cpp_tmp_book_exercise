@@ -44,43 +44,43 @@ TEST_CASE("3-1", "[tmp]")
 
 
 ////////////////////////////////////////////////////////////////////////////////
-using mass                  = mpl::vector_c<int, 1, 0, 0, 0, 0, 0, 0>;
-using length                = mpl::vector_c<int, 0, 1, 0, 0, 0, 0, 0>;
-using time_                 = mpl::vector_c<int, 0, 0, 1, 0, 0, 0, 0>;
-using charge                = mpl::vector_c<int, 0, 0, 0, 1, 0, 0, 0>;
-using temperature           = mpl::vector_c<int, 0, 0, 0, 0, 1, 0, 0>;
-using intensity             = mpl::vector_c<int, 0, 0, 0, 0, 0, 1, 0>;
-using amount_of_substance   = mpl::vector_c<int, 0, 0, 0, 0, 0, 0, 1>;
+namespace dimension_analysis {
+    using mass                  = mpl::vector_c<int, 1, 0, 0, 0, 0, 0, 0>;
+    using length                = mpl::vector_c<int, 0, 1, 0, 0, 0, 0, 0>;
+    using time                  = mpl::vector_c<int, 0, 0, 1, 0, 0, 0, 0>;
+    using charge                = mpl::vector_c<int, 0, 0, 0, 1, 0, 0, 0>;
+    using temperature           = mpl::vector_c<int, 0, 0, 0, 0, 1, 0, 0>;
+    using intensity             = mpl::vector_c<int, 0, 0, 0, 0, 0, 1, 0>;
+    using amount_of_substance   = mpl::vector_c<int, 0, 0, 0, 0, 0, 0, 1>;
 
-using velocity              = mpl::vector_c<int, 0, 1, -1, 0, 0, 0, 0>; // l/t
-using acceleration          = mpl::vector_c<int, 0, 1, -2, 0, 0, 0, 0>; // l/(t^2)
-using momentum              = mpl::vector_c<int, 1, 1, -1, 0, 0, 0, 0>; // ml/t
-using force                 = mpl::vector_c<int, 1, 1, -2, 0, 0, 0, 0>; // ml/(t^2)
+    using velocity              = mpl::vector_c<int, 0, 1, -1, 0, 0, 0, 0>; // l/t
+    using acceleration          = mpl::vector_c<int, 0, 1, -2, 0, 0, 0, 0>; // l/(t^2)
+    using momentum              = mpl::vector_c<int, 1, 1, -1, 0, 0, 0, 0>; // ml/t
+    using force                 = mpl::vector_c<int, 1, 1, -2, 0, 0, 0, 0>; // ml/(t^2)
 
-using scalar                = mpl::vector_c<int, 0, 0, 0, 0, 0, 0, 0>;
+    using scalar                = mpl::vector_c<int, 0, 0, 0, 0, 0, 0, 0>;
 
 
-template <typename T, typename Dimensions>
-class quantity
-{
-public:
-    explicit quantity(T x)
-            : m_value(x)
-    { }
+    template<typename T, typename Dimensions>
+    class quantity {
+    public:
+        explicit quantity(T x)
+                : m_value(x) { }
 
-public:
-    T value() const
-    {
-        return m_value;
-    }
+    public:
+        T value() const {
+            return m_value;
+        }
 
-private:
-    T m_value;
-};
+    private:
+        T m_value;
+    };
+} // namespace dimension_analysis
 
 
 TEST_CASE("3-5", "[tmp]")
 {
+    using namespace dimension_analysis;
 
 }
 
