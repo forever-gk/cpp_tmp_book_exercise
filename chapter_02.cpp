@@ -160,11 +160,11 @@ public:
         if (std::is_pointer<T>()) {
             return type_descriptor<std::remove_pointer_t<T>>().to_string() + " *";
         }
+        if (std::is_lvalue_reference<T>()) {
+            return type_descriptor<std::remove_reference_t<T>>().to_string() + " &";
+        }
         if (std::is_rvalue_reference<T>()) {
             return type_descriptor<std::remove_reference_t<T>>().to_string() + " &&";
-        }
-        if (std::is_reference<T>()) {
-            return type_descriptor<std::remove_reference_t<T>>().to_string() + " &";
         }
         if (std::is_array<T>()) {
             extents_.clear();
