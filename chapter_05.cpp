@@ -87,25 +87,6 @@ struct tiny_size<none, none, none> : mpl::int_<0>
 { };
 
 
-template <typename Tiny, typename T, int N>
-struct tiny_push_back;
-
-template <typename Tiny, typename T>
-struct tiny_push_back<Tiny, T, 0>
-        : tiny<T, none, none>
-{ };
-
-template <typename Tiny, typename T>
-struct tiny_push_back<Tiny, T, 1>
-        : tiny<typename Tiny::t0, T, none>
-{ };
-
-template <typename Tiny, typename T>
-struct tiny_push_back<Tiny, T, 2>
-        : tiny<typename Tiny::t0, typename Tiny::t1, T>
-{ };
-
-
 template <typename Tiny, typename Pos>
 struct tiny_iterator
 {
@@ -147,6 +128,12 @@ struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<1>>, T, 2>
 template <typename Tiny, typename T>
 struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<2>>, T, 2>
         : tiny<typename Tiny::t0, typename Tiny::t1, T>
+{ };
+
+
+template <typename Tiny, typename T, int N>
+struct tiny_push_back
+        : tiny_insert<Tiny, typename mpl::end<Tiny>::type, T, N>
 { };
 
 
