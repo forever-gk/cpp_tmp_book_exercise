@@ -240,8 +240,8 @@ TEST_CASE("5-0", "[tmp]")
 
     static_assert(mpl::distance<begin_t, end_t>() == 3, "");
     static_assert(is_same<char, typename mpl::deref<begin_t>::type>(), "");
-    static_assert(is_same<int, typename mpl::deref<typename mpl::advance<begin_t, mpl::int_<1>>::type>::type>(), "");
-    static_assert(is_same<double, typename mpl::deref<typename mpl::advance<begin_t, mpl::int_<2>>::type>::type>(), "");
+    static_assert(is_same<int, typename mpl::deref<typename mpl::advance_c<begin_t, 1>::type>::type>(), "");
+    static_assert(is_same<double, typename mpl::deref<typename mpl::advance_c<begin_t, 2>::type>::type>(), "");
 
     using tiny_1_t = tiny<>;
     static_assert(mpl::size<tiny_1_t>() == 0, "");
@@ -255,9 +255,9 @@ TEST_CASE("5-0", "[tmp]")
     using tiny_4_t = typename mpl::push_back<tiny_3_t, int>::type;
     static_assert(mpl::size<tiny_4_t>() == 3, "");
 
-    static_assert(is_same<char, typename mpl::at<tiny_4_t, mpl::int_<0>>::type>(), "");
-    static_assert(is_same<double, typename mpl::at<tiny_4_t, mpl::int_<1>>::type>(), "");
-    static_assert(is_same<int, typename mpl::at<tiny_4_t, mpl::int_<2>>::type>(), "");
+    static_assert(is_same<char, typename mpl::at_c<tiny_4_t, 0>::type>(), "");
+    static_assert(is_same<double, typename mpl::at_c<tiny_4_t, 1>::type>(), "");
+    static_assert(is_same<int, typename mpl::at_c<tiny_4_t, 2>::type>(), "");
 
     static_assert(is_same<tiny<>, typename mpl::clear<tiny_4_t>::type>(), "");
 }
