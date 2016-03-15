@@ -94,46 +94,29 @@ struct tiny_iterator
 };
 
 
-template <typename Tiny, typename Iterator, typename T, int N>
+template <typename Tiny, typename Iterator, typename T>
 struct tiny_insert;
 
 
 template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T, 0>
-        : tiny<T, typename Tiny::t0, typename Tiny::t1>
-{ };
-
-
-template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T, 1>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T>
         : tiny<T, typename Tiny::t0, typename Tiny::t1>
 { };
 
 template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<1>>, T, 1>
-        : tiny<typename Tiny::t0, T, typename Tiny::t1>
-{ };
-
-
-template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T, 2>
-        : tiny<T, typename Tiny::t0, typename Tiny::t1>
-{ };
-
-template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<1>>, T, 2>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<1>>, T>
         : tiny<typename Tiny::t0, T, typename Tiny::t1>
 { };
 
 template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<2>>, T, 2>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<2>>, T>
         : tiny<typename Tiny::t0, typename Tiny::t1, T>
 { };
 
 
-template <typename Tiny, typename T, int N>
+template <typename Tiny, typename T>
 struct tiny_push_back
-        : tiny_insert<Tiny, typename mpl::end<Tiny>::type, T, N>
+        : tiny_insert<Tiny, typename mpl::end<Tiny>::type, T>
 { };
 
 
@@ -249,7 +232,7 @@ namespace boost { namespace mpl {
             struct apply
             {
                 static_assert(size<Tiny>() < 3, "tiny is full.");
-                using type = typename tiny_push_back<Tiny, T, size<Tiny>::value>::type;
+                using type = typename tiny_push_back<Tiny, T>::type;
             };
         };
 
@@ -260,7 +243,7 @@ namespace boost { namespace mpl {
             struct apply
             {
                 static_assert(size<Tiny>() < 3, "tiny is full.");
-                using type = typename tiny_insert<Tiny, Pos, T, size<Tiny>::value>::type;
+                using type = typename tiny_insert<Tiny, Pos, T>::type;
             };
         };
 }} // namespace boost::mpl
