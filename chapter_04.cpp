@@ -149,21 +149,71 @@ TEST_CASE("4-3", "[tmp]")
 
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-struct is_data_member_pointer;
+using is_data_member_pointer = std::is_member_pointer<T>;
 
 template <typename T>
-struct is_pointer_to_function;
+struct is_pointer_to_function
+        : mpl::and_<
+                std::is_pointer<T>,
+                std::is_function<std::remove_pointer_t<T>>
+            >
+{ };
 
 template <typename T>
-struct is_reference_to_function_pointer;
+struct is_reference_to_function_pointer
+        : mpl::and_<
+                std::is_reference<T>,
+                is_pointer_to_function<std::remove_reference_t<T>>
+            >
+{ };
 
 template <typename T>
-struct is_reference_to_non_const;
+struct is_reference_to_non_const
+        : mpl::and_<
+                std::is_reference<T>,
+                mpl::not_<std::is_const<std::remove_reference_t<T>>>
+            >
+{ };
 
 
 TEST_CASE("4-4", "[tmp]")
 {
+    struct S { };
 
+    static_assert(!is_data_member_pointer<S>(), "");
+    static_assert(is_data_member_pointer<int(S:: *)>(), "");
+
+    static_assert(!is_pointer_to_function<S>(), "");
+    static_assert(!is_pointer_to_function<decltype(std::atoi)>(), "");
+    static_assert(is_pointer_to_function<std::decay_t<decltype(std::atoi)>>(), "");
+
+    static_assert(!is_reference_to_function_pointer<S>(), "");
+    static_assert(!is_reference_to_function_pointer<decltype(std::atoi)>(), "");
+    static_assert(is_reference_to_function_pointer<std::add_lvalue_reference_t<std::decay_t<decltype(std::atoi)>>>(), "");
+    static_assert(is_reference_to_function_pointer<std::add_rvalue_reference_t<std::decay_t<decltype(std::atoi)>>>(), "");
+
+    static_assert(!is_reference_to_non_const<S>(), "");
+    static_assert(!is_reference_to_non_const<S const&>(), "");
+    static_assert(is_reference_to_non_const<S &>(), "");
+}
+
+
+template <typename T>
+struct is_variadic_function : std::false_type
+{ };
+
+template <typename R, typename... Args>
+struct is_variadic_function<R(Args..., ...)> : std::true_type
+{ };
+
+
+TEST_CASE("variadic function match", "[tmp]")
+{
+    static_assert(std::is_function<decltype(std::printf)>(), "");
+    static_assert(std::is_function<decltype(std::atoi)>(), "");
+
+    static_assert(is_variadic_function<decltype(std::printf)>(), "");
+    static_assert(!is_variadic_function<decltype(std::atoi)>(), "");
 }
 
 
