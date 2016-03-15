@@ -178,9 +178,6 @@ struct formula_
 { };
 
 
-template <typename T>
-struct TD;
-
 TEST_CASE("4-3", "[tmp]")
 {
     using std::is_same;
