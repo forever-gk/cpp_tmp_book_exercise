@@ -1,18 +1,28 @@
 #include "catch.hpp"
 
 #include <boost/mpl/iterator_tags.hpp>
+#include <boost/mpl/iterator_range.hpp>
+#include <boost/mpl/int.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/next.hpp>
 #include <boost/mpl/prior.hpp>
 #include <boost/mpl/at.hpp>
-#include <boost/mpl/int.hpp>
 #include <boost/mpl/plus.hpp>
 #include <boost/mpl/minus.hpp>
+#include <boost/mpl/multiplies.hpp>
+#include <boost/mpl/divides.hpp>
 #include <boost/mpl/advance.hpp>
 #include <boost/mpl/distance.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/clear.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/push_back.hpp>
+#include <boost/mpl/equal.hpp>
+#include <boost/mpl/equal_to.hpp>
+#include <boost/mpl/transform.hpp>
+#include <boost/mpl/transform_view.hpp>
+#include <boost/mpl/joint_view.hpp>
 
 
 namespace mpl = boost::mpl;
@@ -250,5 +260,105 @@ TEST_CASE("5-0", "[tmp]")
     static_assert(is_same<int, typename mpl::at<tiny_4_t, mpl::int_<2>>::type>(), "");
 
     static_assert(is_same<tiny<>, typename mpl::clear<tiny_4_t>::type>(), "");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename S>
+struct middle_pos
+        : mpl::advance<
+                typename mpl::begin<S>::type,
+                mpl::divides<mpl::size<S>, mpl::int_<2>>
+            >
+{ };
+
+template <typename S>
+struct double_first_half
+        : mpl::joint_view<
+                mpl::transform_view<
+                        mpl::iterator_range<
+                                typename mpl::begin<S>::type,
+                                typename middle_pos<S>::type
+                        >,
+                        mpl::multiplies<mpl::placeholders::_, mpl::int_<2>>
+                >,
+                mpl::iterator_range<
+                        typename middle_pos<S>::type,
+                        typename mpl::end<S>::type
+                >
+            >
+{ };
+
+
+TEST_CASE("5-1", "[tmp]")
+{
+    using std::is_same;
+
+    using vector_c_t = mpl::vector_c<int, 1, 2, 3, 4>;
+
+    static_assert(2 == mpl::divides<mpl::size<vector_c_t>, mpl::int_<2>>(), "");
+
+    static_assert(
+            mpl::equal_to<
+                    typename mpl::at<
+                                    vector_c_t,
+                                    mpl::divides<mpl::size<vector_c_t>, mpl::int_<2>>
+                                >::type,
+                    mpl::int_<3>
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal_to<
+                    typename mpl::deref<
+                                    typename mpl::advance<
+                                                    typename mpl::begin<vector_c_t>::type,
+                                                    mpl::divides<mpl::size<vector_c_t>, mpl::int_<2>>
+                                                >::type
+                                >::type,
+                    mpl::int_<3>
+            >(),
+            ""
+    );
+
+    static_assert(
+            2 == mpl::size<
+                    typename mpl::iterator_range<
+                                    typename mpl::begin<vector_c_t>::type,
+                                    typename mpl::advance<
+                                                    typename mpl::begin<vector_c_t>::type,
+                                                    mpl::divides<mpl::size<vector_c_t>, mpl::int_<2>>
+                                                >::type
+                                >::type
+                    >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    mpl::vector_c<int, 2, 4, 6, 8>,
+                    typename mpl::transform<
+                                    vector_c_t,
+                                    mpl::multiplies<mpl::placeholders::_, mpl::int_<2>>
+                                >::type
+            >(),
+            ""
+    );
+
+    using double_first_half_t = typename double_first_half<mpl::vector_c<int, 1, 2, 3, 4>>::type;
+    static_assert(mpl::equal_to<mpl::int_<4>, mpl::size<double_first_half_t>>(), "");
+    static_assert(mpl::equal_to<mpl::int_<2>, typename mpl::at_c<double_first_half_t, 0>::type>(), "");
+    static_assert(mpl::equal_to<mpl::int_<4>, typename mpl::at_c<double_first_half_t, 1>::type>(), "");
+    static_assert(mpl::equal_to<mpl::int_<3>, typename mpl::at_c<double_first_half_t, 2>::type>(), "");
+    static_assert(mpl::equal_to<mpl::int_<4>, typename mpl::at_c<double_first_half_t, 3>::type>(), "");
+
+    static_assert(
+            mpl::equal<
+                    typename double_first_half<mpl::vector_c<int, 1, 2, 3, 4>>::type,
+                    mpl::vector_c<int, 2, 4, 3, 4>
+            >(),
+            ""
+    );
 }
 
