@@ -268,6 +268,28 @@ namespace boost { namespace mpl {
             struct apply : tiny_erase<Tiny, Pos>
             { };
         };
+
+        template <>
+        struct pop_back_impl<tiny_tag>
+        {
+            template <typename Tiny>
+            struct apply
+            {
+                static_assert(size<Tiny>() > 0, "tiny is empty.");
+                using type = typename erase<Tiny, typename prior<typename end<Tiny>::type>::type>::type;
+            };
+        };
+
+        template <>
+        struct pop_front_impl<tiny_tag>
+        {
+            template <typename Tiny>
+            struct apply
+            {
+                static_assert(size<Tiny>() > 0, "tiny is empty.");
+                using type = typename erase<Tiny, typename begin<Tiny>::type>::type;
+            };
+        };
 }} // namespace boost::mpl
 
 
@@ -472,6 +494,22 @@ TEST_CASE("5-5", "[tmp]")
             is_same<
                     tiny<char, double>,
                     typename mpl::erase<tiny_t, typename mpl::advance_c<typename mpl::begin<tiny_t>::type, 1>::type>::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            is_same<
+                    tiny<char, int>,
+                    typename mpl::pop_back<tiny_t>::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            is_same<
+                    tiny<int, double>,
+                    typename mpl::pop_front<tiny_t>::type
             >(),
             ""
     );
