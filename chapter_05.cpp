@@ -4,6 +4,7 @@
 #include <boost/mpl/next.hpp>
 #include <boost/mpl/prior.hpp>
 #include <boost/mpl/at.hpp>
+#include <boost/mpl/int.hpp>
 #include <boost/mpl/plus.hpp>
 #include <boost/mpl/minus.hpp>
 #include <boost/mpl/advance.hpp>
@@ -105,19 +106,19 @@ namespace boost { namespace mpl {
         template <typename Tiny, typename Pos>
         struct next<tiny_iterator<Tiny, Pos>>
         {
-            using type = typename tiny_iterator<
-                                            Tiny,
-                                            typename mpl::next<Pos>::type
-                                        >::type;
+            using type = tiny_iterator<
+                                Tiny,
+                                typename mpl::next<Pos>::type
+                            >;
         };
 
         template <typename Tiny, typename Pos>
         struct prior<tiny_iterator<Tiny, Pos>>
         {
-            using type = typename tiny_iterator<
-                                            Tiny,
-                                            typename mpl::prior<Pos>::type
-                                        >::type;
+            using type = tiny_iterator<
+                                Tiny,
+                                typename mpl::prior<Pos>::type
+                            >;
         };
 
         template <>
@@ -217,6 +218,37 @@ namespace boost { namespace mpl {
 
 TEST_CASE("5-0", "[tmp]")
 {
+    using std::is_same;
 
+    using tiny_t = tiny<char, int, double>;
+
+    using begin_t = typename mpl::begin<tiny_t>::type;
+    using end_t = typename mpl::end<tiny_t>::type;
+
+    static_assert(is_same<int, typename mpl::deref<typename mpl::next<begin_t>::type>::type>(), "");
+    static_assert(is_same<double, typename mpl::deref<typename mpl::prior<end_t>::type>::type>(), "");
+
+    static_assert(mpl::distance<begin_t, end_t>() == 3, "");
+    static_assert(is_same<char, typename mpl::deref<begin_t>::type>(), "");
+    static_assert(is_same<int, typename mpl::deref<typename mpl::advance<begin_t, mpl::int_<1>>::type>::type>(), "");
+    static_assert(is_same<double, typename mpl::deref<typename mpl::advance<begin_t, mpl::int_<2>>::type>::type>(), "");
+
+    using tiny_1_t = tiny<>;
+    static_assert(mpl::size<tiny_1_t>() == 0, "");
+
+    using tiny_2_t = typename mpl::push_back<tiny_1_t, double>::type;
+    static_assert(mpl::size<tiny_2_t>() == 1, "");
+
+    using tiny_3_t = typename mpl::push_front<tiny_2_t, char>::type;
+    static_assert(mpl::size<tiny_3_t>() == 2, "");
+
+    using tiny_4_t = typename mpl::push_back<tiny_3_t, int>::type;
+    static_assert(mpl::size<tiny_4_t>() == 3, "");
+
+    static_assert(is_same<char, typename mpl::at<tiny_4_t, mpl::int_<0>>::type>(), "");
+    static_assert(is_same<double, typename mpl::at<tiny_4_t, mpl::int_<1>>::type>(), "");
+    static_assert(is_same<int, typename mpl::at<tiny_4_t, mpl::int_<2>>::type>(), "");
+
+    static_assert(is_same<tiny<>, typename mpl::clear<tiny_4_t>::type>(), "");
 }
 
