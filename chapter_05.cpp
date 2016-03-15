@@ -18,6 +18,7 @@
 #include <boost/mpl/clear.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/push_back.hpp>
+#include <boost/mpl/insert.hpp>
 #include <boost/mpl/equal.hpp>
 #include <boost/mpl/equal_to.hpp>
 #include <boost/mpl/transform.hpp>
@@ -110,6 +111,43 @@ struct tiny_iterator
 {
     using category = mpl::random_access_iterator_tag;
 };
+
+
+template <typename Tiny, typename Iterator, typename T, int N>
+struct tiny_insert;
+
+
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T, 0>
+        : tiny<T, typename Tiny::t0, typename Tiny::t1>
+{ };
+
+
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T, 1>
+        : tiny<T, typename Tiny::t0, typename Tiny::t1>
+{ };
+
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<1>>, T, 1>
+        : tiny<typename Tiny::t0, T, typename Tiny::t1>
+{ };
+
+
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<0>>, T, 2>
+        : tiny<T, typename Tiny::t0, typename Tiny::t1>
+{ };
+
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<1>>, T, 2>
+        : tiny<typename Tiny::t0, T, typename Tiny::t1>
+{ };
+
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<2>>, T, 2>
+        : tiny<typename Tiny::t0, typename Tiny::t1, T>
+{ };
 
 
 namespace boost { namespace mpl {
@@ -225,6 +263,17 @@ namespace boost { namespace mpl {
             {
                 static_assert(size<Tiny>() < 3, "tiny is full.");
                 using type = typename tiny_push_back<Tiny, T, size<Tiny>::value>::type;
+            };
+        };
+
+        template <>
+        struct insert_impl<tiny_tag>
+        {
+            template <typename Tiny, typename Pos, typename T>
+            struct apply
+            {
+                static_assert(size<Tiny>() < 3, "tiny is full.");
+                using type = typename tiny_insert<Tiny, Pos, T, size<Tiny>::value>::type;
             };
         };
 }} // namespace boost::mpl
@@ -373,5 +422,37 @@ TEST_CASE("5-2", "[tmp]")
     // expected compile errors
     //using tiny_1_t = mpl::push_back<tiny_t>::type;
     //using tiny_2_t = mpl::push_front<tiny_t>::type;
+}
+
+TEST_CASE("5-3", "[tmp]")
+{
+    using std::is_same;
+
+    using tiny_t = tiny<>;
+    using tiny_1_t = tiny<char>;
+    using tiny_2_t = tiny<char, int>;
+    using tiny_3_t = tiny<char, int, double>;
+
+    static_assert(is_same<tiny<char>, typename mpl::insert<tiny_t, typename mpl::begin<tiny_t>::type, char>::type>(), "");
+
+    static_assert(is_same<tiny<int, char>, typename mpl::insert<tiny_1_t, typename mpl::begin<tiny_1_t>::type, int>::type>(), "");
+    static_assert(is_same<tiny<char, int>, typename mpl::insert<tiny_1_t, typename mpl::end<tiny_1_t>::type, int>::type>(), "");
+
+    static_assert(is_same<tiny<int, char, int>, typename mpl::insert<tiny_2_t, typename mpl::begin<tiny_2_t>::type, int>::type>(), "");
+    static_assert(is_same<tiny<char, int, int>, typename mpl::insert<tiny_2_t, typename mpl::end<tiny_2_t>::type, int>::type>(), "");
+    static_assert(
+            is_same<
+                    tiny<char, int, int>,
+                    typename mpl::insert<
+                                    tiny_2_t,
+                                    typename mpl::advance_c<typename mpl::begin<tiny_2_t>::type, 1>::type,
+                                    int
+                                >::type
+            >(),
+            ""
+    );
+
+    // expected compile error
+    //using t = typename mpl::insert<tiny_3_t, typename mpl::begin<tiny_3_t>::type, int>::type;
 }
 
