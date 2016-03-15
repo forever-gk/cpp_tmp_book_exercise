@@ -19,6 +19,9 @@
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/insert.hpp>
+#include <boost/mpl/erase.hpp>
+#include <boost/mpl/pop_back.hpp>
+#include <boost/mpl/pop_front.hpp>
 #include <boost/mpl/equal.hpp>
 #include <boost/mpl/equal_to.hpp>
 #include <boost/mpl/transform.hpp>
@@ -117,6 +120,25 @@ struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<2>>, T>
 template <typename Tiny, typename T>
 struct tiny_push_back
         : tiny_insert<Tiny, typename mpl::end<Tiny>::type, T>
+{ };
+
+
+template <typename Tiny, typename Iterator>
+struct tiny_erase;
+
+template <typename Tiny>
+struct tiny_erase<Tiny, tiny_iterator<Tiny, mpl::int_<0>>>
+        : tiny<typename Tiny::t1, typename Tiny::t2, none>
+{ };
+
+template <typename Tiny>
+struct tiny_erase<Tiny, tiny_iterator<Tiny, mpl::int_<1>>>
+        : tiny<typename Tiny::t0, typename Tiny::t2, none>
+{ };
+
+template <typename Tiny>
+struct tiny_erase<Tiny, tiny_iterator<Tiny, mpl::int_<2>>>
+        : tiny<typename Tiny::t0, typename Tiny::t1, none>
 { };
 
 
@@ -245,6 +267,15 @@ namespace boost { namespace mpl {
                 static_assert(size<Tiny>() < 3, "tiny is full.");
                 using type = typename tiny_insert<Tiny, Pos, T>::type;
             };
+        };
+
+        // NOTE: not implemented the range version of erase here.
+        template <>
+        struct erase_impl<tiny_tag>
+        {
+            template <typename Tiny, typename Pos, typename>
+            struct apply : tiny_erase<Tiny, Pos>
+            { };
         };
 }} // namespace boost::mpl
 
@@ -424,5 +455,34 @@ TEST_CASE("5-3", "[tmp]")
 
     // expected compile error
     //using t = typename mpl::insert<tiny_3_t, typename mpl::begin<tiny_3_t>::type, int>::type;
+}
+
+TEST_CASE("5-5", "[tmp]")
+{
+    using std::is_same;
+
+    using tiny_t = tiny<char, int, double>;
+
+    static_assert(
+            is_same<
+                    tiny<int, double>,
+                    typename mpl::erase<tiny_t, typename mpl::begin<tiny_t>::type>::type
+            >(),
+            ""
+    );
+    static_assert(
+            is_same<
+                    tiny<char, int>,
+                    typename mpl::erase<tiny_t, typename mpl::prior<typename mpl::end<tiny_t>::type>::type>::type
+            >(),
+            ""
+    );
+    static_assert(
+            is_same<
+                    tiny<char, double>,
+                    typename mpl::erase<tiny_t, typename mpl::advance_c<typename mpl::begin<tiny_t>::type, 1>::type>::type
+            >(),
+            ""
+    );
 }
 
