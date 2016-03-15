@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <algorithm>
+#include <vector>
 
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/and.hpp>
@@ -219,8 +220,7 @@ TEST_CASE("variadic function match", "[tmp]")
 
 ////////////////////////////////////////////////////////////////////////////////
 template <typename Container, typename Value>
-typename Container::iterator
-container_find(Container & c, Value const& v)
+auto container_find(Container & c, Value const& v)
 {
     return std::find(c.begin(), c.end(), v);
 }
@@ -228,6 +228,10 @@ container_find(Container & c, Value const& v)
 
 TEST_CASE("4-5", "[tmp]")
 {
+    std::vector<int> v{ 1, 2, 3, 4, 5 };
+    std::vector<int> const cv{ 1, 2, 3, 4, 5 };
 
+    REQUIRE(v.end() != container_find(v, 3));
+    REQUIRE(cv.end() != container_find(cv, 3));
 }
 
