@@ -9,6 +9,7 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/apply.hpp>
 #include <boost/mpl/next.hpp>
+#include <boost/mpl/equal_to.hpp>
 #include <boost/mpl/not_equal_to.hpp>
 #include <boost/mpl/greater.hpp>
 #include <boost/mpl/minus.hpp>
@@ -142,9 +143,64 @@ struct formula
 { };
 
 
+template <typename T>
+struct is_even : mpl::false_
+{ };
+
+template <int i>
+struct is_even<mpl::int_<i>> : mpl::bool_<i % 2 == 0>
+{ };
+
+
+template <typename N, typename Predicate>
+struct next_if_
+        : mpl::eval_if<
+                typename mpl::apply<Predicate, N>::type,
+                mpl::next<N>,
+                N
+            >
+{ };
+
+template <typename N1, typename N2>
+struct formula_
+        : mpl::eval_if<
+                mpl::not_equal_to<N1, N2>,
+                mpl::eval_if<
+                        mpl::greater<N1, N2>,
+                        mpl::minus<N1, N2>,
+                        N1
+                >,
+                mpl::plus<
+                        N1,
+                        mpl::multiplies<N1, mpl::int_<2>>
+                >
+            >::type
+{ };
+
+
+template <typename T>
+struct TD;
+
 TEST_CASE("4-3", "[tmp]")
 {
+    using std::is_same;
+    using mpl::placeholders::_;
+    using mpl::int_;
+    using mpl::equal_to;
 
+    static_assert(is_same<int_<1>, typename next_if<int_<1>, is_even<_>>::type>(), "");
+    static_assert(is_same<int_<3>, typename next_if<int_<2>, is_even<_>>::type>(), "");
+
+    static_assert(is_same<int_<1>, typename next_if_<int_<1>, is_even<_>>::type>(), "");
+    static_assert(is_same<int_<3>, typename next_if_<int_<2>, is_even<_>>::type>(), "");
+
+    static_assert(equal_to<int_<9>, formula<int_<3>, int_<3>>>(), "");
+    static_assert(equal_to<int_<3>, formula<int_<3>, int_<4>>>(), "");
+    static_assert(equal_to<int_<1>, formula<int_<4>, int_<3>>>(), "");
+
+    static_assert(equal_to<int_<9>, formula_<int_<3>, int_<3>>>(), "");
+    static_assert(equal_to<int_<3>, formula_<int_<3>, int_<4>>>(), "");
+    static_assert(equal_to<int_<1>, formula_<int_<4>, int_<3>>>(), "");
 }
 
 
