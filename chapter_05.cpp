@@ -211,8 +211,10 @@ namespace boost { namespace mpl {
         {
             template <typename Tiny, typename T>
             struct apply
-                    : tiny<T, typename Tiny::t0, typename Tiny::t1>
-            { };
+            {
+                static_assert(size<Tiny>() < 3, "tiny is full.");
+                using type = typename tiny<T, typename Tiny::t0, typename Tiny::t1>::type;
+            };
         };
 
         template <>
@@ -220,8 +222,10 @@ namespace boost { namespace mpl {
         {
             template <typename Tiny, typename T>
             struct apply
-                    : tiny_push_back<Tiny, T, size<Tiny>::value>
-            { };
+            {
+                static_assert(size<Tiny>() < 3, "tiny is full.");
+                using type = typename tiny_push_back<Tiny, T, size<Tiny>::value>::type;
+            };
         };
 }} // namespace boost::mpl
 
@@ -360,5 +364,14 @@ TEST_CASE("5-1", "[tmp]")
             >(),
             ""
     );
+}
+
+TEST_CASE("5-2", "[tmp]")
+{
+    using tiny_t = tiny<char, int, double>;
+
+    // expected compile errors
+    //using tiny_1_t = mpl::push_back<tiny_t>::type;
+    //using tiny_2_t = mpl::push_front<tiny_t>::type;
 }
 
