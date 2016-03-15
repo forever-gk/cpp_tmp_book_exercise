@@ -117,12 +117,6 @@ struct tiny_insert<Tiny, tiny_iterator<Tiny, mpl::int_<2>>, T>
 { };
 
 
-template <typename Tiny, typename T>
-struct tiny_push_back
-        : tiny_insert<Tiny, typename mpl::end<Tiny>::type, T>
-{ };
-
-
 template <typename Tiny, typename Iterator>
 struct tiny_erase;
 
@@ -251,11 +245,8 @@ namespace boost { namespace mpl {
         struct push_back_impl<tiny_tag>
         {
             template <typename Tiny, typename T>
-            struct apply
-            {
-                static_assert(size<Tiny>() < 3, "tiny is full.");
-                using type = typename tiny_push_back<Tiny, T>::type;
-            };
+            struct apply : insert<Tiny, typename end<Tiny>::type, T>
+            { };
         };
 
         template <>
