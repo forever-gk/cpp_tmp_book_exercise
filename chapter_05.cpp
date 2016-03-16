@@ -577,22 +577,32 @@ template <typename Dimensions, typename Dimension>
 struct push_back_dimension;
 
 template <typename T, int D>
-struct push_back_dimension<dimensions<T>, mpl::int_<D>>
-{
-    using type = dimensions<T[D]>;
-};
+struct push_back_dimension<dimensions<T>, mpl::int_<D>> : dimensions<T[D]>
+{ };
 
 template <typename T, int D0, int D1>
-struct push_back_dimension<dimensions<T[D0]>, mpl::int_<D1>>
-{
-    using type = dimensions<T[D1][D0]>;
-};
+struct push_back_dimension<dimensions<T[D0]>, mpl::int_<D1>> : dimensions<T[D1][D0]>
+{ };
 
 template <typename T, int D0, int D1, int D2>
-struct push_back_dimension<dimensions<T[D1][D0]>, mpl::int_<D2>>
-{
-    using type = dimensions<T[D2][D1][D0]>;
-};
+struct push_back_dimension<dimensions<T[D1][D0]>, mpl::int_<D2>> : dimensions<T[D2][D1][D0]>
+{ };
+
+
+template <typename Dimensions>
+struct pop_back_dimensions;
+
+template <typename T, int D0>
+struct pop_back_dimensions<dimensions<T[D0]>> : dimensions<T>
+{ };
+
+template <typename T, int D1, int D0>
+struct pop_back_dimensions<dimensions<T[D1][D0]>> : dimensions<T[D0]>
+{ };
+
+template <typename T, int D2, int D1, int D0>
+struct pop_back_dimensions<dimensions<T[D2][D1][D0]>> : dimensions<T[D1][D0]>
+{ };
 
 
 namespace boost { namespace mpl {
@@ -628,10 +638,16 @@ namespace boost { namespace mpl {
         struct push_back_impl<dimensions_tag>
         {
             template <typename Dimensions, typename Dimension>
-            struct apply
-            {
-                using type = typename push_back_dimension<Dimensions, Dimension>::type;
-            };
+            struct apply : push_back_dimension<Dimensions, Dimension>
+            { };
+        };
+
+        template <>
+        struct pop_back_impl<dimensions_tag>
+        {
+            template <typename Dimensions>
+            struct apply : pop_back_dimensions<Dimensions>
+            { };
         };
 
         template <typename Dimensions, typename DimensionIndex>
@@ -703,5 +719,7 @@ TEST_CASE("5-7", "[tmp]")
             >(),
             ""
     );
+
+    static_assert(is_same<dimensions<char [5][2]>, typename mpl::pop_back<seq_t>::type>(), "");
 }
 
