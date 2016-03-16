@@ -24,9 +24,11 @@
 #include <boost/mpl/pop_front.hpp>
 #include <boost/mpl/equal.hpp>
 #include <boost/mpl/equal_to.hpp>
+#include <boost/mpl/copy.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/mpl/joint_view.hpp>
+#include <boost/mpl/back_inserter.hpp>
 
 
 namespace mpl = boost::mpl;
@@ -520,11 +522,10 @@ TEST_CASE("5-5", "[tmp]")
 ////////////////////////////////////////////////////////////////////////////////
 struct dimensions_tag;
 
-template <typename Array>
+template <typename T>
 struct dimensions
 {
-    static_assert(std::is_array<Array>(), "Array should be array.");
-
+    using type = dimensions;
     using tag = dimensions_tag;
 };
 
@@ -564,12 +565,34 @@ struct dimension_at<dimensions<T[D2][D1][D0]>, 2> : mpl::int_<D2>
 { };
 
 
-template <typename Dimensions>
+template <typename T>
 struct dimensions_size;
 
-template <typename Array>
-struct dimensions_size<dimensions<Array>> : mpl::int_<std::rank<Array>::value>
+template <typename T>
+struct dimensions_size<dimensions<T>> : mpl::int_<std::rank<T>::value>
 { };
+
+
+template <typename Dimensions, typename Dimension>
+struct push_back_dimension;
+
+template <typename T, int D>
+struct push_back_dimension<dimensions<T>, mpl::int_<D>>
+{
+    using type = dimensions<T[D]>;
+};
+
+template <typename T, int D0, int D1>
+struct push_back_dimension<dimensions<T[D0]>, mpl::int_<D1>>
+{
+    using type = dimensions<T[D1][D0]>;
+};
+
+template <typename T, int D0, int D1, int D2>
+struct push_back_dimension<dimensions<T[D1][D0]>, mpl::int_<D2>>
+{
+    using type = dimensions<T[D2][D1][D0]>;
+};
 
 
 namespace boost { namespace mpl {
@@ -598,6 +621,16 @@ namespace boost { namespace mpl {
             struct apply
             {
                 using type = dimensions_iterator<Dimensions, size<Dimensions>>;
+            };
+        };
+
+        template <>
+        struct push_back_impl<dimensions_tag>
+        {
+            template <typename Dimensions, typename Dimension>
+            struct apply
+            {
+                using type = typename push_back_dimension<Dimensions, Dimension>::type;
             };
         };
 
@@ -640,11 +673,35 @@ TEST_CASE("5-6", "[tmp]")
 ////////////////////////////////////////////////////////////////////////////////
 TEST_CASE("5-7", "[tmp]")
 {
+    using std::is_same;
+
     using seq_t = dimensions<char [10][5][2]>;
 
     static_assert(mpl::deref<typename mpl::begin<seq_t>::type>::value == 2, "");
     static_assert(mpl::deref<typename mpl::next<typename mpl::begin<seq_t>::type>::type>::value == 5, "");
     static_assert(mpl::deref<typename mpl::prior<typename mpl::end<seq_t>::type>::type>::value == 10, "");
 
+    using seq_1_t = dimensions<char>;
+
+    static_assert(mpl::size<seq_1_t>() == 0, "");
+    static_assert(
+            is_same<
+                    dimensions<char [2]>,
+                    typename mpl::push_back<seq_1_t, mpl::int_<2>>::type
+            >(),
+            ""
+    );
+
+    using mpl::placeholders::_;
+    static_assert(
+            is_same<
+                    dimensions<char [10][5][2]>,
+                    typename mpl::copy<
+                                    mpl::vector<mpl::int_<2>, mpl::int_<5>, mpl::int_<10>>,
+                                    mpl::back_inserter<dimensions<char>>
+                                >::type
+            >(),
+            ""
+    );
 }
 
