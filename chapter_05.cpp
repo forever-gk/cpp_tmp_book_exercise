@@ -532,7 +532,7 @@ struct dimensions
 template <typename Dimensions, typename DimensionIndex>
 struct dimensions_iterator
 {
-    using category = mpl::forward_iterator_tag;
+    using category = mpl::bidirectional_iterator_tag;
 };
 
 
@@ -574,6 +574,14 @@ struct dimensions_size<dimensions<Array>> : mpl::int_<std::rank<Array>::value>
 
 namespace boost { namespace mpl {
         template <>
+        struct size_impl<dimensions_tag>
+        {
+            template <typename Dimensions>
+            struct apply : dimensions_size<Dimensions>
+            { };
+        };
+
+        template <>
         struct begin_impl<dimensions_tag>
         {
             template <typename Dimensions>
@@ -589,10 +597,7 @@ namespace boost { namespace mpl {
             template <typename Dimensions>
             struct apply
             {
-                using type = dimensions_iterator<
-                                    Dimensions,
-                                    size<Dimensions>
-                                >;
+                using type = dimensions_iterator<Dimensions, size<Dimensions>>;
             };
         };
 
@@ -606,17 +611,18 @@ namespace boost { namespace mpl {
         };
 
         template <typename Dimensions, typename DimensionIndex>
+        struct prior<dimensions_iterator<Dimensions, DimensionIndex>>
+        {
+            using type = dimensions_iterator<
+                                Dimensions,
+                                typename mpl::prior<DimensionIndex>::type
+                            >;
+        };
+
+        template <typename Dimensions, typename DimensionIndex>
         struct deref<dimensions_iterator<Dimensions, DimensionIndex>>
                 : dimension_at<Dimensions, DimensionIndex::value>
         { };
-
-        template <>
-        struct size_impl<dimensions_tag>
-        {
-            template <typename Dimensions>
-            struct apply : dimensions_size<Dimensions>
-            { };
-        };
 }} // namespace boost::mpl
 
 
@@ -628,5 +634,17 @@ TEST_CASE("5-6", "[tmp]")
     static_assert(mpl::at_c<seq, 0>::type::value == 2, "");
     static_assert(mpl::at_c<seq, 1>::type::value == 5, "");
     static_assert(mpl::at_c<seq, 2>::type::value == 10, "");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+TEST_CASE("5-7", "[tmp]")
+{
+    using seq_t = dimensions<char [10][5][2]>;
+
+    static_assert(mpl::deref<typename mpl::begin<seq_t>::type>::value == 2, "");
+    static_assert(mpl::deref<typename mpl::next<typename mpl::begin<seq_t>::type>::type>::value == 5, "");
+    static_assert(mpl::deref<typename mpl::prior<typename mpl::end<seq_t>::type>::type>::value == 10, "");
+
 }
 
