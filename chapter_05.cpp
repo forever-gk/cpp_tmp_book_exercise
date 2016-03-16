@@ -35,6 +35,7 @@ namespace mpl = boost::mpl;
 struct none
 { };
 
+
 struct tiny_tag
 { };
 
@@ -513,5 +514,119 @@ TEST_CASE("5-5", "[tmp]")
             >(),
             ""
     );
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+struct dimensions_tag;
+
+template <typename Array>
+struct dimensions
+{
+    static_assert(std::is_array<Array>(), "Array should be array.");
+
+    using tag = dimensions_tag;
+};
+
+
+template <typename Dimensions, typename DimensionIndex>
+struct dimensions_iterator
+{
+    using category = mpl::forward_iterator_tag;
+};
+
+
+template <typename Dimensions, int DimensionIndex>
+struct dimension_at;
+
+template <typename T, int D0>
+struct dimension_at<dimensions<T[D0]>, 0> : mpl::int_<D0>
+{ };
+
+template <typename T, int D1, int D0>
+struct dimension_at<dimensions<T[D1][D0]>, 0> : mpl::int_<D0>
+{ };
+
+template <typename T, int D1, int D0>
+struct dimension_at<dimensions<T[D1][D0]>, 1> : mpl::int_<D1>
+{ };
+
+template <typename T, int D2, int D1, int D0>
+struct dimension_at<dimensions<T[D2][D1][D0]>, 0> : mpl::int_<D0>
+{ };
+
+template <typename T, int D2, int D1, int D0>
+struct dimension_at<dimensions<T[D2][D1][D0]>, 1> : mpl::int_<D1>
+{ };
+
+template <typename T, int D2, int D1, int D0>
+struct dimension_at<dimensions<T[D2][D1][D0]>, 2> : mpl::int_<D2>
+{ };
+
+
+template <typename Dimensions>
+struct dimensions_size;
+
+template <typename Array>
+struct dimensions_size<dimensions<Array>> : mpl::int_<std::rank<Array>::value>
+{ };
+
+
+namespace boost { namespace mpl {
+        template <>
+        struct begin_impl<dimensions_tag>
+        {
+            template <typename Dimensions>
+            struct apply
+            {
+                using type = dimensions_iterator<Dimensions, mpl::int_<0>>;
+            };
+        };
+
+        template <>
+        struct end_impl<dimensions_tag>
+        {
+            template <typename Dimensions>
+            struct apply
+            {
+                using type = dimensions_iterator<
+                                    Dimensions,
+                                    size<Dimensions>
+                                >;
+            };
+        };
+
+        template <typename Dimensions, typename DimensionIndex>
+        struct next<dimensions_iterator<Dimensions, DimensionIndex>>
+        {
+            using type = dimensions_iterator<
+                                Dimensions,
+                                typename mpl::next<DimensionIndex>::type
+                            >;
+        };
+
+        template <typename Dimensions, typename DimensionIndex>
+        struct deref<dimensions_iterator<Dimensions, DimensionIndex>>
+                : dimension_at<Dimensions, DimensionIndex::value>
+        { };
+
+        template <>
+        struct size_impl<dimensions_tag>
+        {
+            template <typename Dimensions>
+            struct apply : dimensions_size<Dimensions>
+            { };
+        };
+}} // namespace boost::mpl
+
+
+TEST_CASE("5-6", "[tmp]")
+{
+    using seq = dimensions<char [10][5][2]>;
+
+    static_assert(mpl::size<seq>::value == 3, "");
+    static_assert(mpl::at_c<seq, 0>::type::value == 2, "");
+    static_assert(mpl::at_c<seq, 1>::type::value == 5, "");
+    static_assert(mpl::at_c<seq, 2>::type::value == 10, "");
 }
 
