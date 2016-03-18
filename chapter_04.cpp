@@ -137,7 +137,7 @@ struct formula
                             >::type,
                 typename mpl::plus<
                                 N1,
-                                typename mpl::multiplies<N1, mpl::int_<2>>
+                                typename mpl::multiplies<N1, mpl::int_<2>>::type
                             >::type
             >::type
 { };
@@ -185,11 +185,11 @@ TEST_CASE("4-3", "[tmp]")
     using mpl::int_;
     using mpl::equal_to;
 
-    static_assert(is_same<int_<1>, typename next_if<int_<1>, is_even<_>>::type>(), "");
-    static_assert(is_same<int_<3>, typename next_if<int_<2>, is_even<_>>::type>(), "");
+    static_assert(is_same<int_<1>, next_if<int_<1>, is_even<_>>::type>(), "");
+    static_assert(is_same<int_<3>, next_if<int_<2>, is_even<_>>::type>(), "");
 
-    static_assert(is_same<int_<1>, typename next_if_<int_<1>, is_even<_>>::type>(), "");
-    static_assert(is_same<int_<3>, typename next_if_<int_<2>, is_even<_>>::type>(), "");
+    static_assert(is_same<int_<1>, next_if_<int_<1>, is_even<_>>::type>(), "");
+    static_assert(is_same<int_<3>, next_if_<int_<2>, is_even<_>>::type>(), "");
 
     static_assert(equal_to<int_<9>, formula<int_<3>, int_<3>>>(), "");
     static_assert(equal_to<int_<3>, formula<int_<3>, int_<4>>>(), "");

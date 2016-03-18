@@ -109,7 +109,7 @@ TEST_CASE("3-4", "[tmp]")
     static_assert(
             std::is_same<
                     int ****,
-                    typename twice<twice<add_ptr, _>, int>::type
+                    twice<twice<add_ptr, _>, int>::type
             >(),
             ""
     );
