@@ -1014,7 +1014,39 @@ struct next_inorder<tree<Parent, LeftChild, RightChild>>
 { };
 
 
+//==============================================================================
+struct postorder_view_tag
+{ };
 
+template <typename Tree>
+struct postorder_view
+{
+    using type = postorder_view;
+    using tag = postorder_view_tag;
+
+    using tree = Tree;
+};
+
+template <typename PostOrderView, typename TraversalStack>
+struct postorder_view_iterator
+{
+    using category = mpl::forward_iterator_tag;
+};
+
+
+template <typename T>
+struct next_postorder
+        : mpl::vector<T>
+{ };
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct next_postorder<tree<Parent, LeftChild, RightChild>>
+        : mpl::insert_range<
+                mpl::vector<Parent, RightChild>,
+                typename mpl::end<mpl::vector<Parent, RightChild>>::type,
+                typename next_postorder<LeftChild>::type
+          >
+{ };
 
 
 //==============================================================================
@@ -1152,6 +1184,48 @@ namespace boost { namespace mpl {
 
 
         //======================================================================
+        template <>
+        struct begin_impl<postorder_view_tag>
+        {
+            template <typename PostOrderView>
+            struct apply
+            {
+                using type = postorder_view_iterator<
+                                     PostOrderView,
+                                     typename next_postorder<typename PostOrderView::tree>::type
+                                >;
+            };
+        };
+
+        template <>
+        struct end_impl<postorder_view_tag>
+        {
+            template <typename PostOrderView>
+            struct apply
+            {
+                using type = postorder_view_iterator<
+                                     PostOrderView,
+                                     void
+                                >;
+            };
+        };
+
+        template <typename PostOrderView, typename TraversalStack>
+        struct next<postorder_view_iterator<PostOrderView, TraversalStack>>
+        {
+            using type = postorder_view_iterator<
+                                 PostOrderView,
+                                 typename next_traversal_stack<
+                                              next_postorder<mpl::placeholders::_>,
+                                              typename mpl::pop_back<TraversalStack>::type
+                                 >::type
+                            >;
+        };
+
+        template <typename PostOrderView, typename TraversalStack>
+        struct deref<postorder_view_iterator<PostOrderView, TraversalStack>>
+                : mpl::back<TraversalStack>
+        { };
 }} // namespace boost::mpl
 
 
@@ -1178,6 +1252,15 @@ TEST_CASE("5-10", "[tmp]")
             mpl::equal<
                     inorder_view<tree_seq>,
                     mpl::vector<int, void *, long, double, char>,
+                    std::is_same<_1, _2>
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    postorder_view<tree_seq>,
+                    mpl::vector<int, long, void *, char, double>,
                     std::is_same<_1, _2>
             >(),
             ""
