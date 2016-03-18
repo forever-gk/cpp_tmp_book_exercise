@@ -942,54 +942,6 @@ struct tree
 };
 
 
-template <typename Leaf>
-struct tree_parent
-{
-    using type = Leaf;
-};
-
-template <typename Parent, typename LeftChild, typename RightChild>
-struct tree_parent<tree<Parent, LeftChild, RightChild>>
-{
-    using type = Parent;
-};
-
-
-template <typename Leaf>
-struct tree_left_child
-{
-    using type = Leaf;
-};
-
-template <typename Parent, typename LeftChild, typename RightChild>
-struct tree_left_child<tree<Parent, LeftChild, RightChild>>
-{
-    using type = LeftChild;
-};
-
-
-template <typename Leaf>
-struct tree_right_child
-{
-    using type = Leaf;
-};
-
-template <typename Parent, typename LeftChild, typename RightChild>
-struct tree_right_child<tree<Parent, LeftChild, RightChild>>
-{
-    using type = RightChild;
-};
-
-
-template <typename Leaf>
-struct is_tree_leaf : mpl::true_
-{ };
-
-template <typename Parent, typename LeftChild, typename RightChild>
-struct is_tree_leaf<tree<Parent, LeftChild, RightChild>> : mpl::false_
-{ };
-
-
 struct preorder_view_tag
 { };
 
@@ -1075,11 +1027,7 @@ namespace boost { namespace mpl {
             {
                 using type = preorder_view_iterator<
                                      PreOrderView,
-                                     mpl::vector<
-                                             typename tree_right_child<typename PreOrderView::tree>::type,
-                                             typename tree_left_child<typename PreOrderView::tree>::type,
-                                             typename tree_parent<typename PreOrderView::tree>::type
-                                     >
+                                     next_preorder<typename PreOrderView::tree>
                                 >;
             };
         };
