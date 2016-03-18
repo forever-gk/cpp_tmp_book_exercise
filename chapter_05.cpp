@@ -989,18 +989,18 @@ struct pop_back_until_not_null_child
 { };
 
 
-template <typename TraversalStack>
-struct push_back_next_preorder_traversal
+template <typename NextOrderGenerator, typename TraversalStack>
+struct push_back_next_traversal
         : mpl::insert_range<
                 typename mpl::pop_back<TraversalStack>::type,
                 typename mpl::end<typename mpl::pop_back<TraversalStack>::type>::type,
-                next_preorder<typename mpl::back<TraversalStack>::type>
+                typename mpl::apply<NextOrderGenerator, typename mpl::back<TraversalStack>::type>::type
             >
 { };
 
 
-template <typename TraversalStack>
-class next_preorder_traversal_stack
+template <typename NextOrderGenerator, typename TraversalStack>
+class next_traversal_stack
 {
 private:
     using ts = typename mpl::eval_if<
@@ -1013,7 +1013,7 @@ public:
     using type = typename mpl::eval_if<
                                   mpl::empty<ts>,
                                   mpl::identity<void>,
-                                  push_back_next_preorder_traversal<ts>
+                                  push_back_next_traversal<NextOrderGenerator, ts>
                             >::type;
 };
 
@@ -1050,7 +1050,8 @@ namespace boost { namespace mpl {
         {
             using type = preorder_view_iterator<
                                  PreOrderView,
-                                 typename next_preorder_traversal_stack<
+                                 typename next_traversal_stack<
+                                                  next_preorder<mpl::placeholders::_>,
                                                   typename mpl::pop_back<TraversalStack>::type
                                             >::type
                             >;
@@ -1108,7 +1109,7 @@ TEST_CASE("5-10", "[tmp]")
     static_assert(
             mpl::equal<
                     mpl::vector<int>,
-                    push_back_next_preorder_traversal<mpl::vector<int>>::type
+                    push_back_next_traversal<next_preorder<mpl::placeholders::_>, mpl::vector<int>>::type
             >(),
             ""
     );
@@ -1187,7 +1188,7 @@ TEST_CASE("5-10", "[tmp]")
     static_assert(
             mpl::equal<
                     mpl::vector<>,
-                    next_preorder_traversal_stack<mpl::vector<>>::type
+                    next_traversal_stack<next_preorder<mpl::placeholders::_>, mpl::vector<>>::type
             >(),
             ""
     );
@@ -1208,7 +1209,7 @@ TEST_CASE("5-10", "[tmp]")
     static_assert(
             std::is_same<
                     void,
-                    next_preorder_traversal_stack<mpl::vector<>>::type
+                    next_traversal_stack<next_preorder<mpl::placeholders::_>, mpl::vector<>>::type
             >(),
             ""
     );
