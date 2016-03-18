@@ -918,6 +918,8 @@ TEST_CASE("5-9", "[tmp]")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+//==============================================================================
 struct null_child
 { };
 
@@ -942,6 +944,7 @@ struct tree
 };
 
 
+//==============================================================================
 struct preorder_view_tag
 { };
 
@@ -976,6 +979,45 @@ struct next_preorder<tree<Parent, LeftChild, RightChild>>
 { };
 
 
+//==============================================================================
+struct inorder_view_tag
+{ };
+
+template <typename Tree>
+struct inorder_view
+{
+    using type = inorder_view;
+    using tag = inorder_view_tag;
+
+    using tree = Tree;
+};
+
+template <typename InOrderView, typename TraversalStack>
+struct inorder_view_iterator
+{
+    using category = mpl::forward_iterator_tag;
+};
+
+
+template <typename T>
+struct next_inorder
+        : mpl::vector<T>
+{ };
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct next_inorder<tree<Parent, LeftChild, RightChild>>
+        : mpl::insert_range<
+                mpl::vector<RightChild, Parent>,
+                typename mpl::end<mpl::vector<RightChild, Parent>>::type,
+                typename next_inorder<LeftChild>::type
+            >
+{ };
+
+
+
+
+
+//==============================================================================
 template <typename TraversalStack>
 struct pop_back_until_not_null_child
         : mpl::eval_if<
@@ -1019,6 +1061,7 @@ public:
 
 
 namespace boost { namespace mpl {
+        //======================================================================
         template <>
         struct begin_impl<preorder_view_tag>
         {
@@ -1027,7 +1070,7 @@ namespace boost { namespace mpl {
             {
                 using type = preorder_view_iterator<
                                      PreOrderView,
-                                     next_preorder<typename PreOrderView::tree>
+                                     typename next_preorder<typename PreOrderView::tree>::type
                                 >;
             };
         };
@@ -1061,6 +1104,54 @@ namespace boost { namespace mpl {
         struct deref<preorder_view_iterator<PreOrderView, TraversalStack>>
                 : mpl::back<TraversalStack>
         { };
+
+
+        //======================================================================
+        template <>
+        struct begin_impl<inorder_view_tag>
+        {
+            template <typename InOrderView>
+            struct apply
+            {
+                using type = inorder_view_iterator<
+                                     InOrderView,
+                                     typename next_inorder<typename InOrderView::tree>::type
+                                >;
+            };
+        };
+
+        template <>
+        struct end_impl<inorder_view_tag>
+        {
+            template <typename InOrderView>
+            struct apply
+            {
+                using type = inorder_view_iterator<
+                                     InOrderView,
+                                     void
+                                >;
+            };
+        };
+
+        template <typename InOrderView, typename TraversalStack>
+        struct next<inorder_view_iterator<InOrderView, TraversalStack>>
+        {
+            using type = inorder_view_iterator<
+                                 InOrderView,
+                                 typename next_traversal_stack<
+                                                  next_inorder<mpl::placeholders::_>,
+                                                  typename mpl::pop_back<TraversalStack>::type
+                                 >::type
+                            >;
+        };
+
+        template <typename InOrderView, typename TraversalStack>
+        struct deref<inorder_view_iterator<InOrderView, TraversalStack>>
+                : mpl::back<TraversalStack>
+        { };
+
+
+        //======================================================================
 }} // namespace boost::mpl
 
 
@@ -1076,157 +1167,17 @@ TEST_CASE("5-10", "[tmp]")
 
     static_assert(
             mpl::equal<
-                    mpl::vector<int>,
-                    pop_back_until_not_null_child<mpl::vector<int>>::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            mpl::equal<
-                    mpl::vector<int>,
-                    mpl::insert_range<
-                            mpl::vector<>,
-                            mpl::end<mpl::vector<>>::type,
-                            mpl::vector<int>
-                    >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            mpl::equal<
-                    mpl::vector<int>,
-                    mpl::insert_range<
-                            mpl::pop_back<mpl::vector<int>>::type,
-                            mpl::end<mpl::pop_back<mpl::vector<int>>::type>::type,
-                            mpl::vector<int>
-                    >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            mpl::equal<
-                    mpl::vector<int>,
-                    push_back_next_traversal<next_preorder<mpl::placeholders::_>, mpl::vector<int>>::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            std::is_same<
-                    double,
-                    mpl::deref<
-                            mpl::begin<
-                                    preorder_view<tree_seq>
-                            >::type
-                        >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            std::is_same<
-                    void *,
-                    mpl::deref<
-                            mpl::next<
-                                    mpl::begin<
-                                            preorder_view<tree_seq>
-                                    >::type
-                            >::type
-                    >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            std::is_same<
-                    int,
-                    mpl::deref<
-                            mpl::advance_c<
-                                    mpl::begin<
-                                            preorder_view<tree_seq>
-                                    >::type,
-                                    2
-                            >::type
-                    >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            std::is_same<
-                    long,
-                    mpl::deref<
-                            mpl::advance_c<
-                                    mpl::begin<
-                                            preorder_view<tree_seq>
-                                    >::type,
-                                    3
-                            >::type
-                    >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            std::is_same<
-                    char,
-                    mpl::deref<
-                            mpl::advance_c<
-                                    mpl::begin<
-                                            preorder_view<tree_seq>
-                                    >::type,
-                                    4
-                            >::type
-                    >::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            mpl::equal<
-                    mpl::vector<>,
-                    next_traversal_stack<next_preorder<mpl::placeholders::_>, mpl::vector<>>::type
-            >(),
-            ""
-    );
-
-    static_assert(
-            std::is_same<
-                    mpl::vector<>,
-                    typename mpl::if_<
-                                     mpl::empty<mpl::vector<>>,
-                                     mpl::vector<>,
-                                     typename pop_back_until_not_null_child<mpl::vector<>>::type
-                                >::type
-            >(),
-            ""
-    );
-
-
-    static_assert(
-            std::is_same<
-                    void,
-                    next_traversal_stack<next_preorder<mpl::placeholders::_>, mpl::vector<>>::type
-            >(),
-            ""
-    );
-
-    static_assert(mpl::size<preorder_view<tree_seq>>() == 5, "");
-    static_assert(
-            mpl::distance<
-                    mpl::begin<preorder_view<tree_seq>>::type,
-                    mpl::end<preorder_view<tree_seq>>::type
-            >::type::value == 5,
-            ""
-    );
-
-    static_assert(
-            mpl::equal<
                     preorder_view<tree_seq>,
                     mpl::vector<double, void *, int, long, char>,
+                    std::is_same<_1, _2>
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    inorder_view<tree_seq>,
+                    mpl::vector<int, void *, long, double, char>,
                     std::is_same<_1, _2>
             >(),
             ""
