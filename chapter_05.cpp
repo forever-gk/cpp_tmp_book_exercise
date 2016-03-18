@@ -723,3 +723,58 @@ TEST_CASE("5-7", "[tmp]")
     static_assert(is_same<dimensions<char [5][2]>, typename mpl::pop_back<seq_t>::type>(), "");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+struct fibonacci_series_tag
+{ };
+
+struct fibonacci_series
+{
+    using type = fibonacci_series;
+    using tag = fibonacci_series_tag;
+};
+
+template <typename FibonacciSeries, typename CurrentValue, typename NextValue>
+struct fibonacci_series_iterator
+{
+    using category = mpl::forward_iterator_tag;
+};
+
+
+namespace boost { namespace mpl {
+        template <>
+        struct begin_impl<fibonacci_series_tag>
+        {
+            template <typename S>
+            struct apply
+            {
+                using type = fibonacci_series_iterator<S, mpl::int_<0>, mpl::int_<1>>;
+            };
+        };
+
+        template <typename S, typename CurVal, typename NextVal>
+        struct next<fibonacci_series_iterator<S, CurVal, NextVal>>
+        {
+            using type = fibonacci_series_iterator<
+                                S,
+                                NextVal,
+                                typename mpl::plus<CurVal, NextVal>::type
+                            >;
+        };
+
+        template <typename S, typename CurVal, typename NextVal>
+        struct deref<fibonacci_series_iterator<S, CurVal, NextVal>>
+        {
+            using type = CurVal;
+        };
+}} // namespace boost::mpl
+
+
+TEST_CASE("5-8", "[tmp]")
+{
+    using i = mpl::advance_c<mpl::begin<fibonacci_series>::type, 6>::type;
+    static_assert(mpl::deref<i>::type::value == 8, "");
+
+    using j = mpl::advance_c<i, 4>::type;
+    static_assert(mpl::deref<j>::type::value == 55, "");
+}
+
