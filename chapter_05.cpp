@@ -1,5 +1,6 @@
 #include "catch.hpp"
 
+#include <boost/mpl/identity.hpp>
 #include <boost/mpl/iterator_tags.hpp>
 #include <boost/mpl/iterator_range.hpp>
 #include <boost/mpl/int.hpp>
@@ -13,18 +14,22 @@
 #include <boost/mpl/minus.hpp>
 #include <boost/mpl/multiplies.hpp>
 #include <boost/mpl/divides.hpp>
+#include <boost/mpl/or.hpp>
 #include <boost/mpl/advance.hpp>
 #include <boost/mpl/distance.hpp>
 #include <boost/mpl/size.hpp>
+#include <boost/mpl/empty.hpp>
 #include <boost/mpl/clear.hpp>
 #include <boost/mpl/push_front.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/insert.hpp>
+#include <boost/mpl/insert_range.hpp>
 #include <boost/mpl/erase.hpp>
 #include <boost/mpl/pop_back.hpp>
 #include <boost/mpl/pop_front.hpp>
 #include <boost/mpl/equal.hpp>
 #include <boost/mpl/equal_to.hpp>
+#include <boost/mpl/not.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/transform_view.hpp>
@@ -908,6 +913,373 @@ TEST_CASE("5-9", "[tmp]")
                             -2
                     >::type
             >::type::value == 8,
+            ""
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+struct null_child
+{ };
+
+
+template <typename Parent, typename LeftChild = null_child, typename RightChild = null_child>
+struct tree;
+
+
+template <typename T>
+struct is_tree : mpl::false_
+{ };
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct is_tree<tree<Parent, LeftChild, RightChild>> : mpl::true_
+{ };
+
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct tree
+{
+    static_assert(!is_tree<Parent>(), "Parent should not be a tree itself.");
+};
+
+
+template <typename Leaf>
+struct tree_parent
+{
+    using type = Leaf;
+};
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct tree_parent<tree<Parent, LeftChild, RightChild>>
+{
+    using type = Parent;
+};
+
+
+template <typename Leaf>
+struct tree_left_child
+{
+    using type = Leaf;
+};
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct tree_left_child<tree<Parent, LeftChild, RightChild>>
+{
+    using type = LeftChild;
+};
+
+
+template <typename Leaf>
+struct tree_right_child
+{
+    using type = Leaf;
+};
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct tree_right_child<tree<Parent, LeftChild, RightChild>>
+{
+    using type = RightChild;
+};
+
+
+template <typename Leaf>
+struct is_tree_leaf : mpl::true_
+{ };
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct is_tree_leaf<tree<Parent, LeftChild, RightChild>> : mpl::false_
+{ };
+
+
+struct preorder_view_tag
+{ };
+
+template <typename Tree>
+struct preorder_view
+{
+    using type = preorder_view;
+    using tag = preorder_view_tag;
+
+    using tree = Tree;
+};
+
+template <typename PreOrderView, typename TraversalStack>
+struct preorder_view_iterator
+{
+    using category = mpl::forward_iterator_tag;
+};
+
+
+template <typename T>
+struct next_preorder
+        : mpl::vector<T>
+{ };
+
+template <typename Parent, typename LeftChild, typename RightChild>
+struct next_preorder<tree<Parent, LeftChild, RightChild>>
+        : mpl::vector<
+                RightChild,
+                LeftChild,
+                Parent
+            >
+{ };
+
+
+template <typename TraversalStack>
+struct pop_back_until_not_null_child
+        : mpl::eval_if<
+                mpl::or_<
+                        mpl::empty<TraversalStack>,
+                        mpl::not_<std::is_same<null_child, typename mpl::back<TraversalStack>::type>>
+                >,
+                TraversalStack,
+                pop_back_until_not_null_child<typename mpl::pop_back<TraversalStack>::type>
+            >
+{ };
+
+
+template <typename TraversalStack>
+struct push_back_next_preorder_traversal
+        : mpl::insert_range<
+                typename mpl::pop_back<TraversalStack>::type,
+                typename mpl::end<typename mpl::pop_back<TraversalStack>::type>::type,
+                next_preorder<typename mpl::back<TraversalStack>::type>
+            >
+{ };
+
+
+template <typename TraversalStack>
+class next_preorder_traversal_stack
+{
+private:
+    using ts = typename mpl::eval_if<
+                                mpl::empty<TraversalStack>,
+                                mpl::vector<>,
+                                pop_back_until_not_null_child<TraversalStack>
+                        >::type;
+
+public:
+    using type = typename mpl::eval_if<
+                                  mpl::empty<ts>,
+                                  mpl::identity<void>,
+                                  push_back_next_preorder_traversal<ts>
+                            >::type;
+};
+
+
+namespace boost { namespace mpl {
+        template <>
+        struct begin_impl<preorder_view_tag>
+        {
+            template <typename PreOrderView>
+            struct apply
+            {
+                using type = preorder_view_iterator<
+                                     PreOrderView,
+                                     mpl::vector<
+                                             typename tree_right_child<typename PreOrderView::tree>::type,
+                                             typename tree_left_child<typename PreOrderView::tree>::type,
+                                             typename tree_parent<typename PreOrderView::tree>::type
+                                     >
+                                >;
+            };
+        };
+
+        template <>
+        struct end_impl<preorder_view_tag>
+        {
+            template <typename PreOrderView>
+            struct apply
+            {
+                using type = preorder_view_iterator<
+                                    PreOrderView,
+                                    void
+                                >;
+            };
+        };
+
+        template <typename PreOrderView, typename TraversalStack>
+        struct next<preorder_view_iterator<PreOrderView, TraversalStack>>
+        {
+            using type = preorder_view_iterator<
+                                 PreOrderView,
+                                 typename next_preorder_traversal_stack<
+                                                  typename mpl::pop_back<TraversalStack>::type
+                                            >::type
+                            >;
+        };
+
+        template <typename PreOrderView, typename TraversalStack>
+        struct deref<preorder_view_iterator<PreOrderView, TraversalStack>>
+                : mpl::back<TraversalStack>
+        { };
+}} // namespace boost::mpl
+
+
+TEST_CASE("5-10", "[tmp]")
+{
+    using namespace mpl::placeholders;
+
+    using tree_seq = tree<
+                         double,
+                         tree<void *, int, long>,
+                         char
+                     >;
+
+    static_assert(
+            mpl::equal<
+                    mpl::vector<int>,
+                    pop_back_until_not_null_child<mpl::vector<int>>::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    mpl::vector<int>,
+                    mpl::insert_range<
+                            mpl::vector<>,
+                            mpl::end<mpl::vector<>>::type,
+                            mpl::vector<int>
+                    >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    mpl::vector<int>,
+                    mpl::insert_range<
+                            mpl::pop_back<mpl::vector<int>>::type,
+                            mpl::end<mpl::pop_back<mpl::vector<int>>::type>::type,
+                            mpl::vector<int>
+                    >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    mpl::vector<int>,
+                    push_back_next_preorder_traversal<mpl::vector<int>>::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            std::is_same<
+                    double,
+                    mpl::deref<
+                            mpl::begin<
+                                    preorder_view<tree_seq>
+                            >::type
+                        >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            std::is_same<
+                    void *,
+                    mpl::deref<
+                            mpl::next<
+                                    mpl::begin<
+                                            preorder_view<tree_seq>
+                                    >::type
+                            >::type
+                    >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            std::is_same<
+                    int,
+                    mpl::deref<
+                            mpl::advance_c<
+                                    mpl::begin<
+                                            preorder_view<tree_seq>
+                                    >::type,
+                                    2
+                            >::type
+                    >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            std::is_same<
+                    long,
+                    mpl::deref<
+                            mpl::advance_c<
+                                    mpl::begin<
+                                            preorder_view<tree_seq>
+                                    >::type,
+                                    3
+                            >::type
+                    >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            std::is_same<
+                    char,
+                    mpl::deref<
+                            mpl::advance_c<
+                                    mpl::begin<
+                                            preorder_view<tree_seq>
+                                    >::type,
+                                    4
+                            >::type
+                    >::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    mpl::vector<>,
+                    next_preorder_traversal_stack<mpl::vector<>>::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            std::is_same<
+                    mpl::vector<>,
+                    typename mpl::if_<
+                                     mpl::empty<mpl::vector<>>,
+                                     mpl::vector<>,
+                                     typename pop_back_until_not_null_child<mpl::vector<>>::type
+                                >::type
+            >(),
+            ""
+    );
+
+
+    static_assert(
+            std::is_same<
+                    void,
+                    next_preorder_traversal_stack<mpl::vector<>>::type
+            >(),
+            ""
+    );
+
+    static_assert(mpl::size<preorder_view<tree_seq>>() == 5, "");
+    static_assert(
+            mpl::distance<
+                    mpl::begin<preorder_view<tree_seq>>::type,
+                    mpl::end<preorder_view<tree_seq>>::type
+            >::type::value == 5,
+            ""
+    );
+
+    static_assert(
+            mpl::equal<
+                    preorder_view<tree_seq>,
+                    mpl::vector<double, void *, int, long, char>,
+                    std::is_same<_1, _2>
+            >(),
             ""
     );
 }
