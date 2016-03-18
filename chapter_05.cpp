@@ -8,6 +8,7 @@
 #include <boost/mpl/next.hpp>
 #include <boost/mpl/prior.hpp>
 #include <boost/mpl/at.hpp>
+#include <boost/mpl/back.hpp>
 #include <boost/mpl/plus.hpp>
 #include <boost/mpl/minus.hpp>
 #include <boost/mpl/multiplies.hpp>
@@ -762,10 +763,8 @@ namespace boost { namespace mpl {
         };
 
         template <typename S, typename CurVal, typename NextVal>
-        struct deref<fibonacci_series_iterator<S, CurVal, NextVal>>
-        {
-            using type = CurVal;
-        };
+        struct deref<fibonacci_series_iterator<S, CurVal, NextVal>> : CurVal
+        { };
 }} // namespace boost::mpl
 
 
@@ -776,5 +775,140 @@ TEST_CASE("5-8", "[tmp]")
 
     using j = mpl::advance_c<i, 4>::type;
     static_assert(mpl::deref<j>::type::value == 55, "");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+struct finite_fibonacci_series_tag
+{ };
+
+template <int size>
+struct finite_fibonacci_series
+{
+    using type = finite_fibonacci_series;
+    using tag = finite_fibonacci_series_tag;
+};
+
+template <typename S, typename CurVal, typename NextVal, typename IndexVal>
+struct finite_fibonacci_series_iterator
+{
+    using category = mpl::bidirectional_iterator_tag;
+};
+
+template <typename S>
+struct finite_fibonacci_series_size;
+
+template <int size>
+struct finite_fibonacci_series_size<finite_fibonacci_series<size>> : mpl::int_<size>
+{ };
+
+
+namespace boost { namespace mpl {
+        template <>
+        struct size_impl<finite_fibonacci_series_tag>
+        {
+            template <typename S>
+            struct apply : finite_fibonacci_series_size<S>
+            { };
+        };
+
+        template <>
+        struct begin_impl<finite_fibonacci_series_tag>
+        {
+            template <typename S>
+            struct apply
+            {
+                using type = finite_fibonacci_series_iterator<
+                                    S,
+                                    mpl::int_<0>,
+                                    mpl::int_<1>,
+                                    mpl::int_<0>
+                                >;
+            };
+        };
+
+        template <>
+        struct end_impl<finite_fibonacci_series_tag>
+        {
+            template <typename S>
+            struct apply
+            {
+                using type = finite_fibonacci_series_iterator<
+                                    S,
+                                    void,
+                                    void,
+                                    typename size<S>::type
+                                >;
+            };
+        };
+
+        template <typename S, typename CurVal, typename NextVal, typename IndexVal>
+        struct next<finite_fibonacci_series_iterator<S, CurVal, NextVal, IndexVal>>
+                : mpl::if_<
+                        mpl::equal_to<size<S>, mpl::plus<IndexVal, mpl::int_<1>>>,
+                        finite_fibonacci_series_iterator<
+                                S,
+                                void,
+                                void,
+                                mpl::plus<IndexVal, mpl::int_<1>>
+                        >,
+                        finite_fibonacci_series_iterator<
+                                S,
+                                NextVal,
+                                mpl::plus<CurVal, NextVal>,
+                                mpl::plus<IndexVal, mpl::int_<1>>
+                        >
+                    >
+        { };
+
+        template <typename S, typename CurVal, typename NextVal, typename IndexVal>
+        struct prior<finite_fibonacci_series_iterator<S, CurVal, NextVal, IndexVal>>
+        {
+            using type = finite_fibonacci_series_iterator<
+                                S,
+                                mpl::minus<NextVal, CurVal>,
+                                CurVal,
+                                mpl::minus<IndexVal, mpl::int_<1>>
+                            >;
+        };
+
+        template <typename S, typename IndexVal>
+        struct prior<finite_fibonacci_series_iterator<S, void, void, IndexVal>>
+                : mpl::advance<
+                        typename mpl::begin<S>::type,
+                        mpl::minus<IndexVal, mpl::int_<1>>
+                    >
+        { };
+
+        template <typename S, typename CurVal, typename NextVal, typename IndexVal>
+        struct deref<finite_fibonacci_series_iterator<S, CurVal, NextVal, IndexVal>> : CurVal
+        { };
+}} // namesapce boost::mpl
+
+
+TEST_CASE("5-9", "[tmp]")
+{
+    using seq = finite_fibonacci_series<8>;
+    static_assert(mpl::size<seq>() == 8, "");
+    static_assert(mpl::back<seq>::type::value == 13, "");
+    static_assert(
+            mpl::deref<
+                    mpl::prior<
+                            mpl::prior<
+                                    mpl::end<seq>::type
+                            >::type
+                    >::type
+            >::type::value == 8,
+            ""
+    );
+    static_assert(
+            mpl::deref<
+                    mpl::advance_c<
+                            mpl::end<seq>::type,
+                            -2
+                    >::type
+            >::type::value == 8,
+            ""
+    );
 }
 
