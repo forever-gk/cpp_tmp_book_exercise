@@ -6,6 +6,7 @@
 #include <boost/mpl/less_equal.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
+#include <boost/mpl/fold.hpp>
 #include <boost/mpl/front.hpp>
 #include <boost/mpl/sizeof.hpp>
 
@@ -34,6 +35,16 @@ struct smallest
 { };
 
 
+template <typename Sequence>
+struct smallest_fold
+        : mpl::fold<
+                Sequence,
+                typename mpl::front<Sequence>::type,
+                min_type<mpl::placeholders::_, mpl::placeholders::_>
+            >
+{ };
+
+
 TEST_CASE("6-0", "[tmp]")
 {
     using std::is_same;
@@ -42,6 +53,14 @@ TEST_CASE("6-0", "[tmp]")
             is_same<
                     char,
                     smallest<mpl::vector<int[2], char, double &>>::type
+            >(),
+            ""
+    );
+
+    static_assert(
+            is_same<
+                    char,
+                    smallest_fold<mpl::vector<int[2], char, double &>>::type
             >(),
             ""
     );
