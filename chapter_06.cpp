@@ -71,27 +71,26 @@ TEST_CASE("6-0", "[tmp]")
 ////////////////////////////////////////////////////////////////////////////////
 TEST_CASE("multi-character sequence", "[tmp]")
 {
-    auto cs = 'abcd';
-    static_assert(std::is_same<int, decltype(cs)>(), "");
+    constexpr auto cs = 'abcd';
+    static_assert(std::is_same<int const, decltype(cs)>(), "");
     static_assert(4 == sizeof(cs), "");
-    REQUIRE('d' == ((cs >> 0)  & 0xFF));
-    REQUIRE('c' == ((cs >> 8)  & 0xFF));
-    REQUIRE('b' == ((cs >> 16) & 0xFF));
-    REQUIRE('a' == ((cs >> 24) & 0xFF));
+    static_assert('d' == ((cs >> 0)  & 0xFF), "");
+    static_assert('c' == ((cs >> 8)  & 0xFF), "");
+    static_assert('b' == ((cs >> 16) & 0xFF), "");
+    static_assert('a' == ((cs >> 24) & 0xFF), "");
 
     /*
     // NOTE: compile warning on clang: character constant too long for its type
-    auto cs1 = 'abcde';
-    static_assert(std::is_same<int, decltype(cs1)>(), "");
+    constexpr auto cs1 = 'abcde';
+    static_assert(std::is_same<int const, decltype(cs1)>(), "");
     static_assert(4 == sizeof(cs1), "");
-    REQUIRE('e' == ((cs1 >> 0)  & 0xFF));
-    REQUIRE('d' == ((cs1 >> 8)  & 0xFF));
-    REQUIRE('c' == ((cs1 >> 16) & 0xFF));
-    REQUIRE('b' == ((cs1 >> 24) & 0xFF));
+    static_assert('e' == ((cs1 >> 0)  & 0xFF), "");
+    static_assert('d' == ((cs1 >> 8)  & 0xFF), "");
+    static_assert('c' == ((cs1 >> 16) & 0xFF), "");
+    static_assert('b' == ((cs1 >> 24) & 0xFF), "");
 
-    // NOTE: 'a' was truncated.
-    //       compile warning on clang: shift count >= width of type
-    REQUIRE('a' != ((cs1 >> 32) & 0xFF));
+    // NOTE: 'a' was truncated. compile error on clang.
+    //static_assert('a' != ((cs1 >> 32) & 0xFF), "");
      */
 }
 
