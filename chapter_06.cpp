@@ -3,7 +3,7 @@
 #include <type_traits>
 
 #include <boost/mpl/if.hpp>
-#include <boost/mpl/comparison.hpp>
+#include <boost/mpl/less_equal.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/front.hpp>
