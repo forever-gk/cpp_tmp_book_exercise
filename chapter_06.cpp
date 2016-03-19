@@ -2,14 +2,18 @@
 
 #include <type_traits>
 
+#include <boost/mpl/sizeof.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/mpl/less_equal.hpp>
+#include <boost/mpl/arithmetic.hpp>
+#include <boost/mpl/comparison.hpp>
+#include <boost/mpl/pair.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/string.hpp>
-#include <boost/mpl/copy.hpp>
 #include <boost/mpl/fold.hpp>
+#include <boost/mpl/copy.hpp>
+#include <boost/mpl/transform.hpp>
 #include <boost/mpl/front.hpp>
-#include <boost/mpl/sizeof.hpp>
+#include <boost/mpl/back.hpp>
 
 namespace mpl = boost::mpl;
 
@@ -94,7 +98,52 @@ TEST_CASE("multi-character sequence", "[tmp]")
      */
 }
 
+
+template <typename AccumulatedPair, typename c>
+struct append_digit_value
+        : mpl::pair<
+                mpl::plus<
+                        typename AccumulatedPair::first,
+                        mpl::multiplies<
+                                mpl::minus<c, mpl::char_<'0'>>,
+                                typename AccumulatedPair::second
+                        >
+                >,
+                mpl::multiplies<
+                        typename AccumulatedPair::second,
+                        mpl::int_<2>
+                >
+            >
+{
+    static_assert(
+            mpl::or_<
+                    mpl::equal_to<mpl::char_<'0'>, c>,
+                    mpl::equal_to<mpl::char_<'1'>, c>
+            >(),
+            "c should be '0' or '1'."
+    );
+};
+
+template <int chars>
+struct binary_char
+        : mpl::reverse_fold<
+                mpl::string<chars>,
+                mpl::pair<mpl::int_<0>, mpl::int_<1>>,
+                append_digit_value<mpl::placeholders::_, mpl::placeholders::_>
+            >::type::first
+{ };
+
+
 TEST_CASE("6-1", "[tmp]")
 {
+    static_assert(mpl::size<mpl::string<'1010'>>() == 4, "");
+    static_assert('1' == mpl::front<mpl::string<'1010'>>::type::value, "");
+    static_assert('0' == mpl::back<mpl::string<'1010'>>::type::value, "");
+
+    static_assert(mpl::equal_to<binary_char<'1000'>::type, mpl::int_<8>>(), "");
+    static_assert(mpl::equal_to<binary_char<'1010'>::type, mpl::int_<10>>(), "");
+
+    // expected compile error
+    //static_assert(mpl::equal_to<binary_char<'1019'>::type, mpl::int_<10>>(), "");
 }
 
