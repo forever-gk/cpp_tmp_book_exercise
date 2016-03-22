@@ -280,7 +280,7 @@ namespace boost { namespace mpl {
                                                   next_inorder<mpl::placeholders::_>,
                                                   typename mpl::pop_back<TraversalStack>::type
                                               >::type
-            >;
+                            >;
         };
 
         template <typename InOrderView, typename TraversalStack>
@@ -325,7 +325,7 @@ namespace boost { namespace mpl {
                                                   next_postorder<mpl::placeholders::_>,
                                                   typename mpl::pop_back<TraversalStack>::type
                                               >::type
-            >;
+                            >;
         };
 
         template <typename PostOrderView, typename TraversalStack>
