@@ -308,17 +308,15 @@ namespace boost { namespace mpl {
             template <typename BinaryTreeSearchOrderView>
             struct apply
             {
-                using type = binary_tree_search_order_view_iterator<
-                                    BinaryTreeSearchOrderView,
-                                    void
-                                >;
+                using type = tree<>;
             };
         };
 
         template <typename BinaryTreeSearchOrderView, typename TraversalStack>
         struct next<binary_tree_search_order_view_iterator<BinaryTreeSearchOrderView, TraversalStack>>
         {
-            using type = binary_tree_search_order_view_iterator<
+        private:
+            using iter = binary_tree_search_order_view_iterator<
                                 BinaryTreeSearchOrderView,
                                 typename next_traversal_stack<
                                                 next_search_order<
@@ -328,12 +326,28 @@ namespace boost { namespace mpl {
                                                 typename mpl::pop_back<TraversalStack>::type
                                             >::type
                             >;
+
+        public:
+            using type = typename mpl::if_<
+                                        std::is_same<
+                                                binary_tree_search_order_view_iterator<BinaryTreeSearchOrderView, void>,
+                                                iter
+                                        >,
+                                        tree<>,
+                                        iter
+                                    >::type;
         };
 
         template <typename BinaryTreeSearchOrderView, typename TraversalStack>
         struct deref<binary_tree_search_order_view_iterator<BinaryTreeSearchOrderView, TraversalStack>>
                 : mpl::back<TraversalStack>
         { };
+
+        template <typename P, typename L, typename R>
+        struct end<tree<P, L, R>>
+        {
+            using type = tree<>;
+        };
 }} // namespace boost::mpl
 
 
@@ -355,11 +369,10 @@ TEST_CASE("6-4", "[tmp]")
 
     using pos1 = binary_tree_search<bst, mpl::int_<11>>::type;
     using pos2 = binary_tree_search<bst, mpl::int_<20>>::type;
-    using end_pos1 = mpl::end<binary_tree_search_order_view<bst, mpl::int_<11>>>::type;
-    using end_pos2 = mpl::end<binary_tree_search_order_view<bst, mpl::int_<20>>>::type;
+    using end_pos = mpl::end<bst>::type;
 
-    static_assert(!std::is_same<pos1, end_pos1>(), "");
-    static_assert(std::is_same<pos2, end_pos2>(), "");
+    static_assert(!std::is_same<pos1, end_pos>(), "");
+    static_assert(std::is_same<pos2, end_pos>(), "");
 
     static_assert(mpl::equal_to<mpl::deref<pos1>::type, mpl::int_<11>>(), "");
 }
