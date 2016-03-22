@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 set(SOURCE_FILES
         main.cpp
         binary.h
+        tree.h
         chapter_02.cpp
         chapter_03.cpp
         chapter_04.cpp

@@ -147,3 +147,8 @@ TEST_CASE("6-1", "[tmp]")
     //static_assert(mpl::equal_to<binary_char<'1019'>::type, mpl::int_<10>>(), "");
 }
 
+TEST_CASE("6-3", "[tmp]")
+{
+
+}
+
