@@ -175,23 +175,44 @@ namespace detail
 
     template <typename parent, typename lhs, typename rhs, typename item>
     struct binary_tree_inserter_impl<tree<parent, lhs, rhs>, item>
-            : mpl::if_<
+            : mpl::eval_if<
                     mpl::less_equal<
                             item, parent
                     >,
                     tree<
                             parent,
-                            typename binary_tree_inserter_impl<lhs, item>::type,
+                            binary_tree_inserter_impl<lhs, item>,
                             rhs
                     >,
                     tree<
                             parent,
                             lhs,
-                            typename binary_tree_inserter_impl<rhs, item>::type
+                            binary_tree_inserter_impl<rhs, item>
                     >
                 >
     { };
 } // namespace detail
+
+
+template <typename parent, typename lhs, typename item, typename rhs>
+struct tree<parent, detail::binary_tree_inserter_impl<lhs, item>, rhs>
+{
+    using type = tree<
+                         parent,
+                         typename detail::binary_tree_inserter_impl<lhs, item>::type,
+                         rhs
+                    >;
+};
+
+template <typename parent, typename lhs, typename item, typename rhs>
+struct tree<parent, lhs, detail::binary_tree_inserter_impl<rhs, item>>
+{
+    using type = tree<
+                         parent,
+                         lhs,
+                         typename detail::binary_tree_inserter_impl<rhs, item>::type
+                    >;
+};
 
 
 template
@@ -220,5 +241,23 @@ TEST_CASE("6-3", "[tmp]")
             >(),
             ""
     );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+TEST_CASE("6-4", "[tmp]")
+{
+    /*
+    using bst = mpl::copy<
+                        mpl::vector_c<int, 17, 25, 10, 2, 11>,
+                        binary_tree_inserter<>
+                    >::type;
+
+    using pos1 = binary_tree_search<bst, mpl::int_<11>>::type;
+    using pos2 = binary_tree_search<bst, mpl::int_<20>>::type;
+    using end_pos = mpl::end<bst>::type;
+
+    static_assert(!std::is_same<pos1, end_pos>(), "");
+    static_assert(std::is_same<pos2, end_pos>(), "");
+     */
 }
 
