@@ -13,6 +13,7 @@
 #include <boost/mpl/arithmetic.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/equal.hpp>
+#include <boost/mpl/find_if.hpp>
 
 
 namespace mpl = boost::mpl;
@@ -244,9 +245,109 @@ TEST_CASE("6-3", "[tmp]")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+struct binary_tree_search_order_view_tag
+{ };
+
+
+template <typename BinaryTree, typename Item>
+struct binary_tree_search_order_view
+{
+    using type = binary_tree_search_order_view;
+    using tag = binary_tree_search_order_view_tag;
+
+    using tree = BinaryTree;
+    using item = Item;
+};
+
+
+template <typename BinaryTreeSearchOrderView, typename TraversalStack>
+struct binary_tree_search_order_view_iterator
+{
+    using category = mpl::forward_iterator_tag;
+};
+
+
+template <typename T, typename Item>
+struct next_search_order
+        : mpl::vector<T>
+{ };
+
+template <typename Parent, typename LeftChild, typename RightChild, typename Item>
+struct next_search_order<tree<Parent, LeftChild, RightChild>, Item>
+        : mpl::vector<
+                typename mpl::if_<
+                                 mpl::less_equal<Item, Parent>,
+                                 LeftChild,
+                                 RightChild
+                         >::type,
+                Parent
+            >
+{ };
+
+
+namespace boost { namespace mpl {
+        template <>
+        struct begin_impl<binary_tree_search_order_view_tag>
+        {
+            template <typename BinaryTreeSearchOrderView>
+            struct apply
+            {
+                using type = binary_tree_search_order_view_iterator<
+                                    BinaryTreeSearchOrderView,
+                                    typename next_search_order<
+                                                 typename BinaryTreeSearchOrderView::tree,
+                                                 typename BinaryTreeSearchOrderView::item
+                                             >::type
+                                >;
+            };
+        };
+
+        template <>
+        struct end_impl<binary_tree_search_order_view_tag>
+        {
+            template <typename BinaryTreeSearchOrderView>
+            struct apply
+            {
+                using type = binary_tree_search_order_view_iterator<
+                                    BinaryTreeSearchOrderView,
+                                    void
+                                >;
+            };
+        };
+
+        template <typename BinaryTreeSearchOrderView, typename TraversalStack>
+        struct next<binary_tree_search_order_view_iterator<BinaryTreeSearchOrderView, TraversalStack>>
+        {
+            using type = binary_tree_search_order_view_iterator<
+                                BinaryTreeSearchOrderView,
+                                typename next_traversal_stack<
+                                                next_search_order<
+                                                        mpl::placeholders::_,
+                                                        typename BinaryTreeSearchOrderView::item
+                                                >,
+                                                typename mpl::pop_back<TraversalStack>::type
+                                            >::type
+                            >;
+        };
+
+        template <typename BinaryTreeSearchOrderView, typename TraversalStack>
+        struct deref<binary_tree_search_order_view_iterator<BinaryTreeSearchOrderView, TraversalStack>>
+                : mpl::back<TraversalStack>
+        { };
+}} // namespace boost::mpl
+
+
+template <typename Tree, typename Item>
+struct binary_tree_search
+        : mpl::find_if<
+                binary_tree_search_order_view<Tree, Item>,
+                mpl::equal_to<mpl::placeholders::_, Item>
+            >
+{ };
+
+
 TEST_CASE("6-4", "[tmp]")
 {
-    /*
     using bst = mpl::copy<
                         mpl::vector_c<int, 17, 25, 10, 2, 11>,
                         binary_tree_inserter<>
@@ -254,10 +355,12 @@ TEST_CASE("6-4", "[tmp]")
 
     using pos1 = binary_tree_search<bst, mpl::int_<11>>::type;
     using pos2 = binary_tree_search<bst, mpl::int_<20>>::type;
-    using end_pos = mpl::end<bst>::type;
+    using end_pos1 = mpl::end<binary_tree_search_order_view<bst, mpl::int_<11>>>::type;
+    using end_pos2 = mpl::end<binary_tree_search_order_view<bst, mpl::int_<20>>>::type;
 
-    static_assert(!std::is_same<pos1, end_pos>(), "");
-    static_assert(std::is_same<pos2, end_pos>(), "");
-     */
+    static_assert(!std::is_same<pos1, end_pos1>(), "");
+    static_assert(std::is_same<pos2, end_pos2>(), "");
+
+    static_assert(mpl::equal_to<mpl::deref<pos1>::type, mpl::int_<11>>(), "");
 }
 
