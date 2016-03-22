@@ -154,13 +154,15 @@ namespace detail
     template <typename leaf, typename item>
     struct binary_tree_inserter_impl
             : mpl::if_<
-                    mpl::less_equal<
+                    mpl::less<
                             item, leaf
                     >,
                     tree<leaf, item, null_item>,
                     tree<leaf, null_item, item>
             >
-    { };
+    {
+        static_assert(mpl::not_equal_to<item, leaf>(), "item should be unique.");
+    };
 
     template <typename item>
     struct binary_tree_inserter_impl<tree<>, item>
@@ -177,7 +179,7 @@ namespace detail
     template <typename parent, typename lhs, typename rhs, typename item>
     struct binary_tree_inserter_impl<tree<parent, lhs, rhs>, item>
             : mpl::eval_if<
-                    mpl::less_equal<
+                    mpl::less<
                             item, parent
                     >,
                     tree<
@@ -191,7 +193,9 @@ namespace detail
                             binary_tree_inserter_impl<rhs, item>
                     >
                 >
-    { };
+    {
+        static_assert(mpl::not_equal_to<item, parent>(), "item should be unique.");
+    };
 } // namespace detail
 
 
