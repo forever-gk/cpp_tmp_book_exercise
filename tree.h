@@ -8,15 +8,16 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/empty.hpp>
+#include <boost/mpl/pop_back.hpp>
 #include <boost/mpl/insert_range.hpp>
 
 
 //==============================================================================
-struct null_child
+struct null_item
 { };
 
 
-template <typename Parent, typename LeftChild = null_child, typename RightChild = null_child>
+template <typename Parent = null_item, typename LeftChild = null_item, typename RightChild = null_item>
 struct tree;
 
 
@@ -123,14 +124,14 @@ namespace detail
 
     //==============================================================================
     template <typename TraversalStack>
-    struct pop_back_until_not_null_child
+    struct pop_back_until_not_null_item
             : mpl::eval_if<
                     mpl::or_<
                             mpl::empty<TraversalStack>,
-                            mpl::not_<std::is_same<null_child, typename mpl::back<TraversalStack>::type>>
+                            mpl::not_<std::is_same<null_item, typename mpl::back<TraversalStack>::type>>
                     >,
                     TraversalStack,
-                    pop_back_until_not_null_child<typename mpl::pop_back<TraversalStack>::type>
+                    pop_back_until_not_null_item<typename mpl::pop_back<TraversalStack>::type>
                 >
     { };
 
@@ -152,7 +153,7 @@ namespace detail
         using ts = typename mpl::eval_if<
                                     mpl::empty<TraversalStack>,
                                     mpl::vector<>,
-                                    pop_back_until_not_null_child<TraversalStack>
+                                    pop_back_until_not_null_item<TraversalStack>
                                 >::type;
 
     public:

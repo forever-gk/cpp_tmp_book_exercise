@@ -1,19 +1,19 @@
 #include "catch.hpp"
 
-#include <type_traits>
+#include "tree.h"
 
 #include <boost/mpl/sizeof.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/arithmetic.hpp>
-#include <boost/mpl/comparison.hpp>
-#include <boost/mpl/pair.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/mpl/char.hpp>
 #include <boost/mpl/string.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/copy.hpp>
-#include <boost/mpl/transform.hpp>
+#include <boost/mpl/pair.hpp>
+#include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/front.hpp>
 #include <boost/mpl/back.hpp>
+#include <boost/mpl/comparison.hpp>
+#include <boost/mpl/arithmetic.hpp>
+#include <boost/mpl/copy.hpp>
+#include <boost/mpl/equal.hpp>
+
 
 namespace mpl = boost::mpl;
 
@@ -147,8 +147,78 @@ TEST_CASE("6-1", "[tmp]")
     //static_assert(mpl::equal_to<binary_char<'1019'>::type, mpl::int_<10>>(), "");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+namespace detail
+{
+    template <typename leaf, typename item>
+    struct binary_tree_inserter_impl
+            : mpl::if_<
+                    mpl::less_equal<
+                            item, leaf
+                    >,
+                    tree<leaf, item, null_item>,
+                    tree<leaf, null_item, item>
+            >
+    { };
+
+    template <typename item>
+    struct binary_tree_inserter_impl<tree<>, item>
+    {
+        using type = tree<item>;
+    };
+
+    template <typename item>
+    struct binary_tree_inserter_impl<null_item, item>
+    {
+        using type = item;
+    };
+
+    template <typename parent, typename lhs, typename rhs, typename item>
+    struct binary_tree_inserter_impl<tree<parent, lhs, rhs>, item>
+            : mpl::if_<
+                    mpl::less_equal<
+                            item, parent
+                    >,
+                    tree<
+                            parent,
+                            typename binary_tree_inserter_impl<lhs, item>::type,
+                            rhs
+                    >,
+                    tree<
+                            parent,
+                            lhs,
+                            typename binary_tree_inserter_impl<rhs, item>::type
+                    >
+                >
+    { };
+} // namespace detail
+
+
+template
+<
+        typename Tree = tree<>,
+        typename Inserter = detail::binary_tree_inserter_impl<mpl::placeholders::_, mpl::placeholders::_>
+>
+struct binary_tree_inserter
+{
+    using state = Tree;
+    using operation = Inserter;
+};
+
+
 TEST_CASE("6-3", "[tmp]")
 {
+    using bst = mpl::copy<
+                        mpl::vector_c<int, 17, 25, 10, 2, 11>,
+                        binary_tree_inserter<>
+                    >::type;
 
+    static_assert(
+            mpl::equal<
+                    inorder_view<bst>,
+                    mpl::vector_c<int, 2, 10, 11, 17, 25>
+            >(),
+            ""
+    );
 }
 
