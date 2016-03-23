@@ -1,5 +1,6 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/vector_c.hpp>
+#include <boost/mpl/list_c.hpp>
 #include <boost/mpl/list.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/joint_view.hpp>
@@ -60,6 +61,7 @@ namespace boost { namespace mpl {
 
         // NOTE: There is no specialization of mpl::deref for zip_iterator.
         //          It seems that the 'type' member of zip_iterator is used for mpl::deref's return type.
+        //          mpl::begin and mpl::end will be provided by the mpl::iterator_range automatically.
 }} // namespace boost::mpl
 
 
@@ -121,6 +123,63 @@ TEST_CASE("7-3", "[tmp]")
             mpl::equal<
                     view,
                     mpl::range_c<int, 0, 10>
+            >(),
+            ""
+    );
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename IndexSequenceIterator, typename RandomAccessIteratorBegin>
+struct permutation_iterator
+{
+    using category = mpl::forward_iterator_tag;
+
+    using type = typename mpl::deref<
+                                  typename mpl::advance<
+                                                   RandomAccessIteratorBegin,
+                                                   typename mpl::deref<IndexSequenceIterator>::type
+                                               >::type
+                            >::type;
+};
+
+
+namespace boost { namespace mpl {
+        template <typename IndexSequenceIterator, typename RandomAccessIteratorBegin>
+        struct next<permutation_iterator<IndexSequenceIterator, RandomAccessIteratorBegin>>
+        {
+            using type = permutation_iterator<
+                                typename mpl::next<IndexSequenceIterator>::type,
+                                RandomAccessIteratorBegin
+                            >;
+        };
+}} // namespace boost::mpl
+
+
+template <typename IndexSequence, typename RandomAccessSequence>
+struct permutation_view
+        : mpl::iterator_range<
+                permutation_iterator<
+                        typename mpl::begin<IndexSequence>::type,
+                        typename mpl::begin<RandomAccessSequence>::type
+                >,
+                permutation_iterator<
+                        typename mpl::end<IndexSequence>::type,
+                        typename mpl::begin<RandomAccessSequence>::type
+                >
+            >
+{ };
+
+
+TEST_CASE("7-6", "[tmp]")
+{
+    static_assert(
+            mpl::equal<
+                    mpl::vector_c<int, 33, 22, 44, 11, 33>,
+                    permutation_view<
+                            mpl::list_c<int, 2, 1, 3, 0, 2>,
+                            mpl::vector_c<int, 11, 22, 33, 44>
+                    >
             >(),
             ""
     );
