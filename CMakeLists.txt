@@ -19,7 +19,8 @@ set(SOURCE_FILES
         chapter_03.cpp
         chapter_04.cpp
         chapter_05.cpp
-        chapter_06.cpp)
+        chapter_06.cpp
+        chapter_07.cpp)
 
 add_executable(cpp_tmp_book_exercise ${SOURCE_FILES})
 
