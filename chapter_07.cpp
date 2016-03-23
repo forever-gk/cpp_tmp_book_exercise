@@ -1,5 +1,8 @@
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/list.hpp>
+#include <boost/mpl/range_c.hpp>
+#include <boost/mpl/joint_view.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/equal.hpp>
 
@@ -84,6 +87,40 @@ TEST_CASE("7-0", "[tmp]")
                     mpl::deref<
                             mpl::advance_c<mpl::begin<zipped_t>::type, 2>::type
                     >::type
+            >(),
+            ""
+    );
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename Sequence, typename RotationCenterPositionIterator>
+struct rotate_view
+        : mpl::joint_view<
+                mpl::iterator_range<
+                        RotationCenterPositionIterator,
+                        typename mpl::end<Sequence>::type
+                >,
+                mpl::iterator_range<
+                        typename mpl::begin<Sequence>::type,
+                        RotationCenterPositionIterator
+                >
+            >
+{ };
+
+
+TEST_CASE("7-3", "[tmp]")
+{
+    using v = mpl::vector_c<int, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4>;
+    using view = rotate_view<
+                        v,
+                        mpl::advance_c<mpl::begin<v>::type, 5>::type
+                    >;
+
+    static_assert(
+            mpl::equal<
+                    view,
+                    mpl::range_c<int, 0, 10>
             >(),
             ""
     );
