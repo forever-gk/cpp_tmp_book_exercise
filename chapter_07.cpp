@@ -185,3 +185,61 @@ TEST_CASE("7-6", "[tmp]")
     );
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename Sequence, typename Iterator>
+struct reverse_iterator
+{
+    using category = typename Iterator::category;
+
+    using type = typename mpl::deref<
+                                typename mpl::prior<Iterator>::type
+                            >::type;
+};
+
+
+namespace boost { namespace mpl {
+        template <typename Sequence, typename Iterator>
+        struct next<reverse_iterator<Sequence, Iterator>>
+        {
+            using type = reverse_iterator<
+                                Sequence,
+                                typename mpl::eval_if<
+                                                 std::is_same<
+                                                         typename mpl::begin<Sequence>::type,
+                                                         typename mpl::prior<Iterator>::type
+                                                 >,
+                                                 mpl::identity<void>,
+                                                 mpl::prior<Iterator>
+                                             >::type
+                            >;
+        };
+}} // namespace boost::mpl
+
+
+template <typename Sequence>
+struct reverse_view
+        : mpl::iterator_range<
+                reverse_iterator<
+                        Sequence,
+                        typename mpl::end<Sequence>::type
+                >,
+                reverse_iterator<
+                        Sequence,
+                        void
+                >
+            >
+{ };
+
+
+TEST_CASE("7-7", "[tmp]")
+{
+    static_assert(
+            mpl::equal<
+                    mpl::vector_c<int, 5, 4, 3, 2, 1>,
+                    reverse_view<mpl::vector_c<int, 1, 2, 3, 4, 5>>
+            >(),
+            ""
+    );
+}
+
