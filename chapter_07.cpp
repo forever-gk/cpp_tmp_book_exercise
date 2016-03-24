@@ -1,3 +1,4 @@
+#include <boost/mpl/pair.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/list_c.hpp>
@@ -238,6 +239,93 @@ TEST_CASE("7-7", "[tmp]")
             mpl::equal<
                     mpl::vector_c<int, 5, 4, 3, 2, 1>,
                     reverse_view<mpl::vector_c<int, 1, 2, 3, 4, 5>>
+            >(),
+            ""
+    );
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename Sequence1, typename Iterator1, typename Sequence2, typename Iterator2>
+struct crossproduct_iterator
+{
+    using category = mpl::forward_iterator_tag;
+
+    using type = mpl::pair<
+                        typename mpl::deref<Iterator1>::type,
+                        typename mpl::deref<Iterator2>::type
+                    >;
+};
+
+
+template <typename Sequence1, typename Sequence2>
+struct crossproduct_view
+        : mpl::iterator_range<
+                crossproduct_iterator<
+                        Sequence1,
+                        typename mpl::begin<Sequence1>::type,
+                        Sequence2,
+                        typename mpl::begin<Sequence2>::type
+                >,
+                crossproduct_iterator<
+                        Sequence1,
+                        typename mpl::end<Sequence1>::type,
+                        Sequence2,
+                        typename mpl::end<Sequence2>::type
+                >
+            >
+{ };
+
+
+namespace boost { namespace mpl {
+        template <typename Sequence1, typename Iterator1, typename Sequence2, typename Iterator2>
+        struct next<crossproduct_iterator<Sequence1, Iterator1, Sequence2, Iterator2>>
+        {
+            using type = typename mpl::if_<
+                                        std::is_same<
+                                                typename mpl::end<Sequence2>::type,
+                                                typename mpl::next<Iterator2>::type
+                                        >,
+                                        crossproduct_iterator<
+                                                Sequence1,
+                                                typename mpl::next<Iterator1>::type,
+                                                Sequence2,
+                                                typename mpl::if_<
+                                                                std::is_same<
+                                                                        typename mpl::next<Iterator1>::type,
+                                                                        typename mpl::end<Sequence1>::type
+                                                                >,
+                                                                typename mpl::end<Sequence2>::type,
+                                                                typename mpl::begin<Sequence2>::type
+                                                           >::type
+                                        >,
+                                        crossproduct_iterator<
+                                                Sequence1,
+                                                Iterator1,
+                                                Sequence2,
+                                                typename mpl::next<Iterator2>::type
+                                        >
+                                    >::type;
+        };
+}} // namespace boost::mpl
+
+
+TEST_CASE("7-8", "[tmp]")
+{
+    static_assert(
+            mpl::equal<
+                    mpl::vector<
+                            mpl::pair<char, mpl::int_<1>>,
+                            mpl::pair<char, mpl::int_<2>>,
+                            mpl::pair<int, mpl::int_<1>>,
+                            mpl::pair<int, mpl::int_<2>>,
+                            mpl::pair<double, mpl::int_<1>>,
+                            mpl::pair<double, mpl::int_<2>>
+                    >,
+                    crossproduct_view<
+                            mpl::vector<char, int, double>,
+                            mpl::vector<mpl::int_<1>, mpl::int_<2>>
+                    >
             >(),
             ""
     );
