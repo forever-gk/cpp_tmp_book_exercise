@@ -121,6 +121,20 @@ auto compose(F const& f, G const& g)
 }
 
 
+TEST_CASE("9-0", "[tmp]")
+{
+    struct Empty1 { };
+    struct Empty2 { };
+
+    struct X : Empty1 { };
+    struct Y : Empty1, Empty2 { };
+
+    REQUIRE(1 == sizeof(Empty1));
+    REQUIRE(1 == sizeof(Empty2));
+    REQUIRE(1 == sizeof(X));
+    REQUIRE(1 == sizeof(Y)); // NOTE: clang does Multiple EBCO.
+}
+
 TEST_CASE("9-1", "[tmp]")
 {
     struct S
