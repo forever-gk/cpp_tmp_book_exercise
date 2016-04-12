@@ -1,6 +1,9 @@
 #include "catch.hpp"
 
 #include <type_traits>
+#include <tuple>
+
+#include <boost/compressed_pair.hpp>
 
 
 template <typename F, bool F_empty, typename G, bool G_empty>
@@ -126,14 +129,43 @@ TEST_CASE("9-0", "[tmp]")
 {
     struct Empty1 { };
     struct Empty2 { };
+    struct Empty3 { };
 
     struct X : Empty1 { };
     struct Y : Empty1, Empty2 { };
+    struct Z : Empty1, Empty2, Empty3 { };
 
-    REQUIRE(1 == sizeof(Empty1));
-    REQUIRE(1 == sizeof(Empty2));
-    REQUIRE(1 == sizeof(X));
-    REQUIRE(1 == sizeof(Y)); // NOTE: the latest clang and msvc do Multiple-EBCO.
+    static_assert(1 == sizeof(Empty1), "");
+    static_assert(1 == sizeof(Empty2), "");
+    static_assert(1 == sizeof(Empty3), "");
+
+    // NOTE: the latest clang and msvc do Multiple-EBCO... but they behave differently...
+    static_assert(1 == sizeof(X), "");
+    static_assert(1 == sizeof(Y), "");
+
+#ifndef _MSC_VER
+    static_assert(1 == sizeof(Z), "");
+#else
+    static_assert(2 == sizeof(Z), "");
+#endif
+
+    // NOTE: the latest clang and msvc don't do E(B)CO for pairs.
+    static_assert(2 == sizeof(std::pair<Empty1, Empty2>), "");
+
+    static_assert(1 == sizeof(boost::compressed_pair<Empty1, Empty2>), "");
+
+    // NOTE: the latest clang does E(B)CO for tuples, but msvc doesn't.
+#ifndef _MSC_VER
+    static_assert(1 == sizeof(std::tuple<>), "");
+    static_assert(1 == sizeof(std::tuple<Empty1>), "");
+    static_assert(1 == sizeof(std::tuple<Empty1, Empty2>), "");
+    static_assert(1 == sizeof(std::tuple<Empty1, Empty2, Empty3>), "");
+#else
+    static_assert(1 == sizeof(std::tuple<>), "");
+    static_assert(1 == sizeof(std::tuple<Empty1>), "");
+    static_assert(2 == sizeof(std::tuple<Empty1, Empty2>), "");
+    static_assert(3 == sizeof(std::tuple<Empty1, Empty2, Empty3>), "");
+#endif
 }
 
 TEST_CASE("9-1", "[tmp]")
