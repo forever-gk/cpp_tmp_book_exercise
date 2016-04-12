@@ -121,6 +121,7 @@ auto compose(F const& f, G const& g)
 }
 
 
+// refer to http://en.cppreference.com/w/cpp/language/ebo
 TEST_CASE("9-0", "[tmp]")
 {
     struct Empty1 { };
