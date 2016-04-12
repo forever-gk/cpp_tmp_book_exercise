@@ -15,8 +15,8 @@ protected:
     { }
 
 protected:
-    F const& get_f() { return f; }
-    G const& get_g() { return g; }
+    F const& get_f() const { return f; }
+    G const& get_g() const { return g; }
 
 private:
     F f;
@@ -33,8 +33,8 @@ protected:
     { }
 
 protected:
-    F const& get_f() { return *this; }
-    G const& get_g() { return g; }
+    F const& get_f() const { return *this; }
+    G const& get_g() const { return g; }
 
 private:
     G g;
@@ -50,8 +50,8 @@ protected:
     { }
 
 protected:
-    F const& get_f() { return f; }
-    G const& get_g() { return *this; }
+    F const& get_f() const { return f; }
+    G const& get_g() const { return *this; }
 
 private:
     F f;
@@ -67,8 +67,22 @@ protected:
     { }
 
 protected:
-    F const& get_f() { return *this; }
-    G const& get_g() { return *this; }
+    F const& get_f() const { return *this; }
+    G const& get_g() const { return *this; }
+};
+
+template <typename F>
+class storage<F, true, F, true>
+        : F
+{
+protected:
+    storage(F const& f, F const&)
+            : F(f)
+    { }
+
+protected:
+    F const& get_f() const { return *this; }
+    F const& get_g() const { return *this; }
 };
 
 
@@ -77,13 +91,13 @@ class compose_fg
         : storage<
                 F, std::is_empty<F>::value,
                 G, std::is_empty<G>::value
-        >
+            >
 {
 private:
     using base = storage<
-            F, std::is_empty<F>::value,
-            G, std::is_empty<G>::value
-    >;
+                         F, std::is_empty<F>::value,
+                         G, std::is_empty<G>::value
+                    >;
 
 public:
     compose_fg(F const& f, G const& g)
@@ -100,8 +114,24 @@ public:
 };
 
 
-TEST_CASE("", "[tmp]")
+template <typename R, typename F, typename G>
+auto compose(F const& f, G const& g)
 {
+    return compose_fg<R, F, G>(f, g);
+}
 
+
+TEST_CASE("9-1", "[tmp]")
+{
+    struct S
+    {
+        int operator () (int i) const
+        {
+            return i * i;
+        }
+    };
+
+    auto composedFunc = compose<int>(S(), S());
+    REQUIRE(16 == composedFunc(2));
 }
 
