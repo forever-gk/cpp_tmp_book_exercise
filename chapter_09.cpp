@@ -132,7 +132,7 @@ TEST_CASE("9-0", "[tmp]")
     REQUIRE(1 == sizeof(Empty1));
     REQUIRE(1 == sizeof(Empty2));
     REQUIRE(1 == sizeof(X));
-    REQUIRE(1 == sizeof(Y)); // NOTE: clang and msvc do Multiple EBCO.
+    REQUIRE(1 == sizeof(Y)); // NOTE: the latest clang and msvc do Multiple-EBCO.
 }
 
 TEST_CASE("9-1", "[tmp]")
