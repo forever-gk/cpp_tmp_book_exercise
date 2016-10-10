@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.5.2)
 project(cpp_tmp_book_exercise)
 
-set(BOOST_ROOT "../boost_1_60_0")
-find_package(Boost 1.60.0)
+set(BOOST_ROOT "../boost_1_62_0")
+find_package(Boost 1.62.0)
 if(Boost_FOUND)
     include_directories(${BOOST_ROOT})
 else()
     message(FATAL_ERROR "Could not find boost!")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 
 set(SOURCE_FILES
         main.cpp
