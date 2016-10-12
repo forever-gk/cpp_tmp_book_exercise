@@ -1,4 +1,13 @@
-#include <boost/mpl/int.hpp>
+#ifndef BOOST_PP_IS_ITERATING
+
+#   ifndef TINY_H_INCLUDED
+#       define TINY_H_INCLUDED
+
+#       include <boost/mpl/int.hpp>
+#       include <boost/preprocessor/iteration/iterate.hpp>
+
+
+#define TINY_MAX_SIZE 3
 
 
 struct none
@@ -104,3 +113,13 @@ template <typename Tiny>
 struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
         : tiny<typename Tiny::t0, typename Tiny::t1, none>
 { };
+
+#   endif // TINY_H_INCLUDED
+
+#else // BOOST_PP_IS_ITERATING
+
+#   define n BOOST_PP_ITERATION()
+
+#   undef n
+
+#endif // BOOST_PP_IS_ITERATING
