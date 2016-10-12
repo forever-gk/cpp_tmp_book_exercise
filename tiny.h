@@ -11,9 +11,14 @@
 #       include <boost/preprocessor/repetition/enum.hpp>
 #       include <boost/preprocessor/repetition/enum_params.hpp>
 #       include <boost/preprocessor/repetition/enum_trailing.hpp>
+#       include <boost/preprocessor/repetition/repeat.hpp>
 #       include <boost/preprocessor/arithmetic/add.hpp>
 #       include <boost/preprocessor/arithmetic/sub.hpp>
+#       include <boost/preprocessor/punctuation/comma.hpp>
 #       include <boost/preprocessor/punctuation/comma_if.hpp>
+#       include <boost/preprocessor/comparison/not_equal.hpp>
+#       include <boost/preprocessor/control/expr_if.hpp>
+#       include <boost/preprocessor/seq/enum.hpp>
 
 #       ifndef TINY_MAX_SIZE
 #           define TINY_MAX_SIZE 3
@@ -63,20 +68,6 @@ struct tiny_insert;
 template <typename Tiny, typename Iterator>
 struct tiny_erase;
 
-template <typename Tiny>
-struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<0>>>
-        : tiny<typename Tiny::t1, typename Tiny::t2, none>
-{ };
-
-template <typename Tiny>
-struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<1>>>
-        : tiny<typename Tiny::t0, typename Tiny::t2, none>
-{ };
-
-template <typename Tiny>
-struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
-        : tiny<typename Tiny::t0, typename Tiny::t1, none>
-{ };
 
 #       define BOOST_PP_ITERATION_LIMITS (0, TINY_MAX_SIZE - 1)
 #       define BOOST_PP_FILENAME_1 "tiny.h"   // this header file
@@ -130,6 +121,26 @@ struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<n>>, T>
 
 #   undef TINY_insert_1
 #   undef TINY_insert_0
+
+
+#   define TINY_erase(z, n, data)                           \
+                BOOST_PP_EXPR_IF(                           \
+                    BOOST_PP_NOT_EQUAL(n, data),            \
+                    (typename Tiny::BOOST_PP_CAT(t, n))     \
+                )
+
+template <typename Tiny>
+struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<n>>>
+        : tiny<
+                BOOST_PP_SEQ_ENUM(
+                    BOOST_PP_REPEAT(TINY_MAX_SIZE, TINY_erase, n)
+                )
+                BOOST_PP_COMMA()
+                none
+            >
+{ };
+
+#   undef TINY_erase
 
 
 #   undef n
