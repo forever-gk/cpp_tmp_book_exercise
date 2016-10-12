@@ -33,20 +33,20 @@ struct tiny_tag
 { };
 
 
-#   define TINY_tiny_0(z, n, data) typename BOOST_PP_CAT(T, n) = none
-#   define TINY_tiny_1(z, n, data) using BOOST_PP_CAT(t, n) = BOOST_PP_CAT(T, n);
+#   define TINY_tiny_param(z, n, data) typename BOOST_PP_CAT(T, n) = none
+#   define TINY_tiny_using(z, n, data) using BOOST_PP_CAT(t, n) = BOOST_PP_CAT(T, n);
 
-template <BOOST_PP_ENUM(TINY_MAX_SIZE, TINY_tiny_0, ~)>
+template <BOOST_PP_ENUM(TINY_MAX_SIZE, TINY_tiny_param, ~)>
 struct tiny
 {
     using type = tiny;
     using tag = tiny_tag;
 
-    BOOST_PP_REPEAT(TINY_MAX_SIZE, TINY_tiny_1, ~)
+    BOOST_PP_REPEAT(TINY_MAX_SIZE, TINY_tiny_using, ~)
 };
 
-#   undef TINY_tiny_1
-#   undef TINY_tiny_0
+#   undef TINY_tiny_using
+#   undef TINY_tiny_param
 
 
 template <typename Tiny, int N>
@@ -106,25 +106,25 @@ struct tiny_size
 #   undef TINY_size
 
 
-#   define TINY_insert_0(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
-#   define TINY_insert_1(z, n, data) typename Tiny::BOOST_PP_CAT(t, BOOST_PP_ADD(n, data))
+#   define TINY_insert_before(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
+#   define TINY_insert_after(z, n, data) typename Tiny::BOOST_PP_CAT(t, BOOST_PP_ADD(n, data))
 
 template <typename Tiny, typename T>
 struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<n>>, T>
         : tiny<
-                BOOST_PP_ENUM(n, TINY_insert_0, ~)
+                BOOST_PP_ENUM(n, TINY_insert_before, ~)
                 BOOST_PP_COMMA_IF(n)
                 T
                 BOOST_PP_ENUM_TRAILING(
                     BOOST_PP_SUB(TINY_MAX_SIZE, BOOST_PP_ADD(n, 1)),
-                    TINY_insert_1,
+                    TINY_insert_after,
                     n
                 )
             >
 { };
 
-#   undef TINY_insert_1
-#   undef TINY_insert_0
+#   undef TINY_insert_after
+#   undef TINY_insert_before
 
 
 #   define TINY_erase(z, n, data)                           \
