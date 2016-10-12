@@ -143,6 +143,8 @@ namespace boost { namespace mpl {
             };
         };
 
+        #define TINY_enum_param(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
+
         template <>
         struct end_impl<tiny_tag>
         {
@@ -152,9 +154,7 @@ namespace boost { namespace mpl {
                 using type = tiny_iterator<
                                     Tiny,
                                     typename tiny_size<
-                                                    typename Tiny::t0,
-                                                    typename Tiny::t1,
-                                                    typename Tiny::t2
+                                                    BOOST_PP_ENUM(TINY_MAX_SIZE, TINY_enum_param, ~)
                                                 >::type
                                 >;
             };
@@ -165,11 +165,7 @@ namespace boost { namespace mpl {
         {
             template <typename Tiny>
             struct apply
-                    : tiny_size<
-                            typename Tiny::t0,
-                            typename Tiny::t1,
-                            typename Tiny::t2
-                        >
+                    : tiny_size<BOOST_PP_ENUM(TINY_MAX_SIZE, TINY_enum_param, ~)>
             { };
         };
 
@@ -187,10 +183,19 @@ namespace boost { namespace mpl {
             template <typename Tiny, typename T>
             struct apply
             {
-                static_assert(size<Tiny>() < 3, "tiny is full.");
-                using type = typename tiny<T, typename Tiny::t0, typename Tiny::t1>::type;
+                static_assert(size<Tiny>() < TINY_MAX_SIZE, "tiny is full.");
+                using type = typename tiny<
+                                            T,
+                                            BOOST_PP_ENUM(
+                                                BOOST_PP_SUB(TINY_MAX_SIZE, 1),
+                                                TINY_enum_param,
+                                                ~
+                                            )
+                                        >::type;
             };
         };
+
+        #undef TINY_enum_param
 
         template <>
         struct push_back_impl<tiny_tag>
@@ -206,7 +211,7 @@ namespace boost { namespace mpl {
             template <typename Tiny, typename Pos, typename T>
             struct apply
             {
-                static_assert(size<Tiny>() < 3, "tiny is full.");
+                static_assert(size<Tiny>() < TINY_MAX_SIZE, "tiny is full.");
                 using type = typename tiny_insert<Tiny, Pos, T>::type;
             };
         };
