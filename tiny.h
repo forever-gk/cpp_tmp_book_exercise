@@ -79,7 +79,7 @@ struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
 { };
 
 #       define BOOST_PP_ITERATION_LIMITS (0, TINY_MAX_SIZE - 1)
-#       define BOOST_PP_FILENAME_1 "appendix_a.h"   // this header file
+#       define BOOST_PP_FILENAME_1 "tiny.h"   // this header file
 #       include BOOST_PP_ITERATE()
 
 #   endif // TINY_H_INCLUDED

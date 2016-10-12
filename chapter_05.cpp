@@ -3,7 +3,7 @@
 #include "tree.h"
 
 // for tiny
-#include "appendix_a.h"
+#include "tiny.h"
 
 #include <boost/mpl/arithmetic.hpp>
 #include <boost/mpl/comparison.hpp>
