@@ -33,16 +33,20 @@ struct tiny_tag
 { };
 
 
-template <typename T0 = none, typename T1 = none, typename T2 = none>
+#   define TINY_tiny_0(z, n, data) typename BOOST_PP_CAT(T, n) = none
+#   define TINY_tiny_1(z, n, data) using BOOST_PP_CAT(t, n) = BOOST_PP_CAT(T, n);
+
+template <BOOST_PP_ENUM(TINY_MAX_SIZE, TINY_tiny_0, ~)>
 struct tiny
 {
     using type = tiny;
     using tag = tiny_tag;
 
-    using t0 = T0;
-    using t1 = T1;
-    using t2 = T2;
+    BOOST_PP_REPEAT(TINY_MAX_SIZE, TINY_tiny_1, ~)
 };
+
+#   undef TINY_tiny_1
+#   undef TINY_tiny_0
 
 
 template <typename Tiny, int N>
