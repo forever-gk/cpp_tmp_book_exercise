@@ -15,6 +15,7 @@ set(SOURCE_FILES
         main.cpp
         binary.h
         tree.h
+        appendix_a.h
         chapter_02.cpp
         chapter_03.cpp
         chapter_04.cpp
@@ -22,7 +23,8 @@ set(SOURCE_FILES
         chapter_06.cpp
         chapter_07.cpp
         chapter_09.cpp
-        chapter_10.cpp)
+        chapter_10.cpp
+        appendix_a.cpp)
 
 add_executable(cpp_tmp_book_exercise ${SOURCE_FILES})
 
