@@ -4,10 +4,12 @@
 #       define TINY_H_INCLUDED
 
 #       include <boost/mpl/int.hpp>
+#       include <boost/preprocessor/cat.hpp>
 #       include <boost/preprocessor/iteration/iterate.hpp>
 
-
-#define TINY_MAX_SIZE 3
+#       ifndef TINY_MAX_SIZE
+#           define TINY_MAX_SIZE 3
+#       endif // TINY_MAX_SIZE
 
 
 struct none
@@ -32,24 +34,6 @@ struct tiny
 
 template <typename Tiny, int N>
 struct tiny_at;
-
-template <typename Tiny>
-struct tiny_at<Tiny, 0>
-{
-    using type = typename Tiny::t0;
-};
-
-template <typename Tiny>
-struct tiny_at<Tiny, 1>
-{
-    using type = typename Tiny::t1;
-};
-
-template <typename Tiny>
-struct tiny_at<Tiny, 2>
-{
-    using type = typename Tiny::t2;
-};
 
 
 template <typename T0, typename T1, typename T2>
@@ -114,11 +98,23 @@ struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
         : tiny<typename Tiny::t0, typename Tiny::t1, none>
 { };
 
+#       define BOOST_PP_ITERATION_LIMITS (0, TINY_MAX_SIZE - 1)
+#       define BOOST_PP_FILENAME_1 "appendix_a.h"   // this header file
+#       include BOOST_PP_ITERATE()
+
 #   endif // TINY_H_INCLUDED
 
 #else // BOOST_PP_IS_ITERATING
 
 #   define n BOOST_PP_ITERATION()
+
+
+template <typename Tiny>
+struct tiny_at<Tiny, n>
+{
+    using type = typename Tiny::BOOST_PP_CAT(t, n);
+};
+
 
 #   undef n
 
