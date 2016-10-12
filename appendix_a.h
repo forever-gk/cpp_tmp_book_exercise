@@ -6,6 +6,10 @@
 #       include <boost/mpl/int.hpp>
 #       include <boost/preprocessor/cat.hpp>
 #       include <boost/preprocessor/iteration/iterate.hpp>
+#       include <boost/preprocessor/repetition/enum.hpp>
+#       include <boost/preprocessor/repetition/enum_params.hpp>
+#       include <boost/preprocessor/arithmetic/sub.hpp>
+#       include <boost/preprocessor/punctuation/comma_if.hpp>
 
 #       ifndef TINY_MAX_SIZE
 #           define TINY_MAX_SIZE 3
@@ -36,20 +40,8 @@ template <typename Tiny, int N>
 struct tiny_at;
 
 
-template <typename T0, typename T1, typename T2>
-struct tiny_size : boost::mpl::int_<3>
-{ };
-
-template <typename T0, typename T1>
-struct tiny_size<T0, T1, none> : boost::mpl::int_<2>
-{ };
-
-template <typename T0>
-struct tiny_size<T0, none, none> : boost::mpl::int_<1>
-{ };
-
-template <>
-struct tiny_size<none, none, none> : boost::mpl::int_<0>
+template <BOOST_PP_ENUM_PARAMS(TINY_MAX_SIZE, typename T)>
+struct tiny_size : boost::mpl::int_<TINY_MAX_SIZE>
 { };
 
 
@@ -108,6 +100,8 @@ struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
 
 #   define n BOOST_PP_ITERATION()
 
+#   define TINY_print(z, n, data) data
+
 
 template <typename Tiny>
 struct tiny_at<Tiny, n>
@@ -116,6 +110,18 @@ struct tiny_at<Tiny, n>
 };
 
 
+template <BOOST_PP_ENUM_PARAMS(n, typename T)>
+struct tiny_size
+<
+    BOOST_PP_ENUM_PARAMS(n, T)
+    BOOST_PP_COMMA_IF(n)
+    BOOST_PP_ENUM(BOOST_PP_SUB(TINY_MAX_SIZE, n), TINY_print, none)
+>
+    : boost::mpl::int_<n>
+{ };
+
+
+#   undef TINY_print
 #   undef n
 
 #endif // BOOST_PP_IS_ITERATING
