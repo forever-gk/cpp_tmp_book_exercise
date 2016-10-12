@@ -17,7 +17,7 @@ set(SOURCE_FILES
         main.cpp
         binary.h
         tree.h
-        appendix_a.h
+        tiny.h
         chapter_02.cpp
         chapter_03.cpp
         chapter_04.cpp

@@ -1,3 +1,9 @@
 #include "catch.hpp"
 
-#include "appendix_a.h"
+#include "tiny.h"
+
+
+TEST_CASE("A-0", "[tmp]")
+{
+    // refer to tiny.h file.
+}
