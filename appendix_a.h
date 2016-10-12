@@ -13,9 +13,7 @@
 #       include <boost/preprocessor/repetition/enum_trailing.hpp>
 #       include <boost/preprocessor/arithmetic/add.hpp>
 #       include <boost/preprocessor/arithmetic/sub.hpp>
-#       include <boost/preprocessor/arithmetic/dec.hpp>
 #       include <boost/preprocessor/punctuation/comma_if.hpp>
-#       include <boost/preprocessor/comparison/greater.hpp>
 
 #       ifndef TINY_MAX_SIZE
 #           define TINY_MAX_SIZE 3
