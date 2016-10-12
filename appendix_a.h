@@ -4,12 +4,18 @@
 #       define TINY_H_INCLUDED
 
 #       include <boost/mpl/int.hpp>
+#       include <boost/mpl/iterator_tags.hpp>
+
 #       include <boost/preprocessor/cat.hpp>
 #       include <boost/preprocessor/iteration/iterate.hpp>
 #       include <boost/preprocessor/repetition/enum.hpp>
 #       include <boost/preprocessor/repetition/enum_params.hpp>
+#       include <boost/preprocessor/repetition/enum_trailing.hpp>
+#       include <boost/preprocessor/arithmetic/add.hpp>
 #       include <boost/preprocessor/arithmetic/sub.hpp>
+#       include <boost/preprocessor/arithmetic/dec.hpp>
 #       include <boost/preprocessor/punctuation/comma_if.hpp>
+#       include <boost/preprocessor/comparison/greater.hpp>
 
 #       ifndef TINY_MAX_SIZE
 #           define TINY_MAX_SIZE 3
@@ -56,22 +62,6 @@ template <typename Tiny, typename Iterator, typename T>
 struct tiny_insert;
 
 
-template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<0>>, T>
-        : tiny<T, typename Tiny::t0, typename Tiny::t1>
-{ };
-
-template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<1>>, T>
-        : tiny<typename Tiny::t0, T, typename Tiny::t1>
-{ };
-
-template <typename Tiny, typename T>
-struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>, T>
-        : tiny<typename Tiny::t0, typename Tiny::t1, T>
-{ };
-
-
 template <typename Tiny, typename Iterator>
 struct tiny_erase;
 
@@ -102,6 +92,9 @@ struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
 
 #   define TINY_print(z, n, data) data
 
+#   define TINY_insert_0(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
+#   define TINY_insert_1(z, n, data) typename Tiny::BOOST_PP_CAT(t, BOOST_PP_ADD(n, data))
+
 
 template <typename Tiny>
 struct tiny_at<Tiny, n>
@@ -121,7 +114,26 @@ struct tiny_size
 { };
 
 
+template <typename Tiny, typename T>
+struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<n>>, T>
+        : tiny<
+                BOOST_PP_ENUM(n, TINY_insert_0, ~)
+                BOOST_PP_COMMA_IF(n)
+                T
+                BOOST_PP_ENUM_TRAILING(
+                    BOOST_PP_SUB(TINY_MAX_SIZE, BOOST_PP_ADD(n, 1)),
+                    TINY_insert_1,
+                    n
+                )
+            >
+{ };
+
+
+#   undef TINY_insert_1
+#   undef TINY_insert_0
+
 #   undef TINY_print
+
 #   undef n
 
 #endif // BOOST_PP_IS_ITERATING
