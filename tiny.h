@@ -88,11 +88,6 @@ struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
 
 #   define n BOOST_PP_ITERATION()
 
-#   define TINY_size(z, n, data) data
-
-#   define TINY_insert_0(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
-#   define TINY_insert_1(z, n, data) typename Tiny::BOOST_PP_CAT(t, BOOST_PP_ADD(n, data))
-
 
 template <typename Tiny>
 struct tiny_at<Tiny, n>
@@ -100,6 +95,8 @@ struct tiny_at<Tiny, n>
     using type = typename Tiny::BOOST_PP_CAT(t, n);
 };
 
+
+#   define TINY_size(z, n, data) data
 
 template <BOOST_PP_ENUM_PARAMS(n, typename T)>
 struct tiny_size
@@ -111,6 +108,11 @@ struct tiny_size
     : boost::mpl::int_<n>
 { };
 
+#   undef TINY_size
+
+
+#   define TINY_insert_0(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
+#   define TINY_insert_1(z, n, data) typename Tiny::BOOST_PP_CAT(t, BOOST_PP_ADD(n, data))
 
 template <typename Tiny, typename T>
 struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<n>>, T>
@@ -126,11 +128,9 @@ struct tiny_insert<Tiny, tiny_iterator<Tiny, boost::mpl::int_<n>>, T>
             >
 { };
 
-
 #   undef TINY_insert_1
 #   undef TINY_insert_0
 
-#   undef TINY_print
 
 #   undef n
 
