@@ -90,7 +90,7 @@ struct tiny_erase<Tiny, tiny_iterator<Tiny, boost::mpl::int_<2>>>
 
 #   define n BOOST_PP_ITERATION()
 
-#   define TINY_print(z, n, data) data
+#   define TINY_size(z, n, data) data
 
 #   define TINY_insert_0(z, n, data) typename Tiny::BOOST_PP_CAT(t, n)
 #   define TINY_insert_1(z, n, data) typename Tiny::BOOST_PP_CAT(t, BOOST_PP_ADD(n, data))
@@ -108,7 +108,7 @@ struct tiny_size
 <
     BOOST_PP_ENUM_PARAMS(n, T)
     BOOST_PP_COMMA_IF(n)
-    BOOST_PP_ENUM(BOOST_PP_SUB(TINY_MAX_SIZE, n), TINY_print, none)
+    BOOST_PP_ENUM(BOOST_PP_SUB(TINY_MAX_SIZE, n), TINY_size, none)
 >
     : boost::mpl::int_<n>
 { };
