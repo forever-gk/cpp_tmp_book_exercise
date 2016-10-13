@@ -131,7 +131,9 @@ struct wrap : T
 {
     auto operator = (typename T::value_type const& rhs) const
     {
-        return wrap<T>{ rhs };
+        wrap<T> t;
+        t.value = rhs;
+        return t;
     }
 };
 
@@ -199,17 +201,24 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
                                 >                                           \
                             >::type;                                        \
             template <typename T, typename U>                               \
-            auto operator , (wrap<T> && lhs, wrap<U> && rhs)                \
+            auto operator , (wrap<T> const& lhs, wrap<U> const& rhs)        \
             {                                                               \
                 tuple_t t;                                                  \
-                get(lhs, t) = std::move(lhs.value);                         \
-                ght(rhs, t) = std::move(rhs.value);                         \
+                get(lhs, t) = lhs.value;                                    \
+                get(rhs, t) = rhs.value;                                    \
                 return t;                                                   \
             }                                                               \
             template <typename T>                                           \
-            auto operator , (tuple_t && lhs, wrap<T> && rhs)                \
+            auto operator , (tuple_t const& lhs, wrap<T> const& rhs)        \
             {                                                               \
-                get(rhs, lhs) = std::move(rhs.value);                       \
+                tuple_t t(lhs);                                             \
+                get(rhs, t) = rhs.value;                                    \
+                return t;                                                   \
+            }                                                               \
+            template <typename T>                                           \
+            auto operator , (tuple_t && lhs, wrap<T> const& rhs)            \
+            {                                                               \
+                get(rhs, lhs) = rhs.value;                                  \
                 return std::move(lhs);                                      \
             }                                                               \
         }
@@ -225,6 +234,35 @@ NAMED_PARAM(
 
 TEST_CASE("10-3", "[tmp]")
 {
+
+}
+
+TEST_CASE("person params", "[tmp]")
+{
+    using namespace person;
+
+    auto p = (id = 10);
+    REQUIRE(10 == p.value);
+    auto p1 = (age = 200);
+    REQUIRE(200 == p1.value);
+
+    auto p2 = (p, p1);
+    REQUIRE(get(id, p2) == 10);
+    REQUIRE(get(name, p2) == "none");
+    REQUIRE(get(age, p2) == 200);
+    REQUIRE(get(code, p2) == 1024);
+
+    auto p3 = (p2, name = "ghjang");
+    REQUIRE(get(id, p3) == 10);
+    REQUIRE(get(name, p3) == "ghjang");
+    REQUIRE(get(age, p3) == 200);
+    REQUIRE(get(code, p3) == 1024);
+
+    auto p4 = (code = 97, name = "ghjang");
+    REQUIRE(get(id, p4) == 0);
+    REQUIRE(get(name, p4) == "ghjang");
+    REQUIRE(get(age, p4) == 0);
+    REQUIRE(get(code, p4) == 97);       
 }
 
 TEST_CASE("person get", "[tmp]")
