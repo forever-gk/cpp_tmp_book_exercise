@@ -207,6 +207,17 @@ TEST_CASE("10-3", "[tmp]")
 {
 }
 
+TEST_CASE("person get", "[tmp]")
+{
+    using namespace person;
+    tuple_t t;
+    REQUIRE(get(id, t) == 0);
+    REQUIRE(get(name, t) == "none");
+    REQUIRE(get(age, t) == 0);
+    REQUIRE(get(code, t) == 1024);
+}
+
+
 #undef NAMED_PARAM
 #undef NAMED_PARAM_get_name_field
 #undef NAMED_PARAM_to_tuple_seq
