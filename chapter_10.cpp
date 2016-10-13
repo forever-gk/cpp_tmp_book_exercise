@@ -143,6 +143,12 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
     return static_cast<wrap<Tag> &>(t).value;
 }
 
+template <typename Tag, typename T, typename U>
+auto get(wrap<Tag>, boost::mpl::inherit2<T, U> && t)
+{
+    return std::move(static_cast<wrap<Tag> &>(t).value);
+}
+
 
 #define CREATE_PLACEHOLDER_FILLER_0(...)  \
             ((__VA_ARGS__)) CREATE_PLACEHOLDER_FILLER_1
@@ -234,7 +240,16 @@ NAMED_PARAM(
 
 TEST_CASE("10-3", "[tmp]")
 {
+    using namespace person;
 
+    auto f = [](auto && params) {
+        REQUIRE(get(id, params) == 0);
+        REQUIRE(get(name, params) == "ghjang");
+        REQUIRE(get(age, params) == 0);
+        REQUIRE(get(code, params) == 97);
+    };
+
+    f((code = 97, name = "ghjang"));
 }
 
 TEST_CASE("person params", "[tmp]")
