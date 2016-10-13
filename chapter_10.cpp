@@ -130,6 +130,13 @@ template <typename T>
 struct wrap : T
 { };
 
+template <typename Tag, typename T, typename U>
+auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
+{
+    return static_cast<wrap<Tag> &>(t).value;
+}
+
+
 #define CREATE_PLACEHOLDER_FILLER_0(...)  \
             ((__VA_ARGS__)) CREATE_PLACEHOLDER_FILLER_1
 #define CREATE_PLACEHOLDER_FILLER_1(...)  \
@@ -177,11 +184,6 @@ struct wrap : T
                                     boost::mpl::placeholders::_1                    \
                                 >                                                   \
                             >::type;                                                \
-            template <typename Tag, typename T, typename U>                         \
-            auto & get(Tag, boost::mpl::inherit2<T, U> & t)                         \
-            {                                                                       \
-                return static_cast<wrap<Tag> &>(t).value;                           \
-            }                                                                       \
         }
 
 
