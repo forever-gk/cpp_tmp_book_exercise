@@ -3,6 +3,8 @@
 #define BOOST_PP_VARIADICS 1
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
 
 
@@ -95,6 +97,17 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
                     )
                  );
     REQUIRE(3 == size1);
+
+    auto size2 = BOOST_PP_SEQ_SIZE(
+                    SEQ_of_tuple(
+                        person,
+                        (id,    int,               0)
+                        (name,  std::string,      "")
+                        (age,   int,               0)
+                        (code,  int,            1024)
+                    )
+                 );
+    REQUIRE(4 == size2);
 }
 
 #undef SEQ_of_tuple
@@ -105,7 +118,51 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
 #undef CREATE_MY_MACRO_PLACEHOLDER_FILLER_0
 
 
+////////////////////////////////////////////////////////////////////////////////
+#define CREATE_PLACEHOLDER_FILLER_0(...)  \
+            ((__VA_ARGS__)) CREATE_PLACEHOLDER_FILLER_1
+#define CREATE_PLACEHOLDER_FILLER_1(...)  \
+            ((__VA_ARGS__)) CREATE_PLACEHOLDER_FILLER_0
+#define CREATE_PLACEHOLDER_FILLER_0_END
+#define CREATE_PLACEHOLDER_FILLER_1_END
+
+#define NAMED_PARAM_tag(r, data, elem)                                      \
+        struct BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag) {           \
+            static BOOST_PP_TUPLE_ELEM(1, elem) const default_value;        \
+        };                                                                  \
+        BOOST_PP_TUPLE_ELEM(1, elem) const                                  \
+            BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)::default_value \
+                { BOOST_PP_TUPLE_ELEM(2, elem) };
+
+#define NAMED_PARAM(ns, param)                                              \
+            namespace ns                                                    \
+            {                                                               \
+                BOOST_PP_SEQ_FOR_EACH(                                      \
+                    NAMED_PARAM_tag,                                        \
+                    ~,                                                      \
+                    BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)   \
+                )                                                           \
+            }
+
+
+NAMED_PARAM(
+    person,
+    (id,    int,               0)
+    (name,  std::string,      "")
+    (age,   int,               0)
+    (code,  int,            1024)
+)
+
 TEST_CASE("10-3", "[tmp]")
 {
 
 }
+
+#undef CREATE_PLACEHOLDER_FILLER_1_END
+#undef CREATE_PLACEHOLDER_FILLER_0_END
+#undef CREATE_PLACEHOLDER_FILLER_1
+#undef CREATE_PLACEHOLDER_FILLER_0
+
+#undef NAMED_PARAM_tag
+
+#undef NAMED_PARAM
