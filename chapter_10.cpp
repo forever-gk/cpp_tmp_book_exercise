@@ -144,21 +144,26 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
 #define CREATE_PLACEHOLDER_FILLER_0_END
 #define CREATE_PLACEHOLDER_FILLER_1_END
 
-#define NAMED_PARAM_declare_tag_type(r, data, elem)                         \
-        struct BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag) {           \
-            static BOOST_PP_TUPLE_ELEM(1, elem) const default_value;        \
-            BOOST_PP_TUPLE_ELEM(1, elem) value { default_value };           \
-        };                                                                  \
-        BOOST_PP_TUPLE_ELEM(1, elem) const                                  \
-            BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)::default_value \
-                { BOOST_PP_TUPLE_ELEM(2, elem) };                           \
-        static wrap<BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)> const \
-                BOOST_PP_TUPLE_ELEM(0, elem) { };
+#define NAMED_PARAM_name(elem) BOOST_PP_TUPLE_ELEM(0, elem)
+#define NAMED_PARAM_tag_type(elem) BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)
+#define NAMED_PARAM_value_type(elem) BOOST_PP_TUPLE_ELEM(1, elem)
+#define NAMED_PARAM_default_value(elem) BOOST_PP_TUPLE_ELEM(2, elem)
+
+#define NAMED_PARAM_declare_tag_type(r, data, elem)                     \
+        struct NAMED_PARAM_tag_type(elem) {                             \
+            static NAMED_PARAM_value_type(elem) const default_value;    \
+            NAMED_PARAM_value_type(elem) value { default_value };       \
+        };                                                              \
+        NAMED_PARAM_value_type(elem) const                              \
+            NAMED_PARAM_tag_type(elem)::default_value                   \
+                { NAMED_PARAM_default_value(elem) };                    \
+        static wrap<NAMED_PARAM_tag_type(elem)> const                   \
+                NAMED_PARAM_name(elem) { };
 
 #define NAMED_PARAM_to_tuple_seq(param) \
         BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)
 
-#define NAMED_PARAM_get_name(s, data, elem) \
+#define NAMED_PARAM_get_name_field(s, data, elem) \
         BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)
 
 #define NAMED_PARAM(ns, param)                                              \
@@ -173,7 +178,7 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
                 = boost::mpl::vector<                                       \
                     BOOST_PP_SEQ_ENUM(                                      \
                         BOOST_PP_SEQ_TRANSFORM(                             \
-                            NAMED_PARAM_get_name,                           \
+                            NAMED_PARAM_get_name_field,                     \
                             ~,                                              \
                             NAMED_PARAM_to_tuple_seq(param)                 \
                         )                                                   \
