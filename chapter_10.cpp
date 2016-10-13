@@ -198,7 +198,7 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
 NAMED_PARAM(
     person,
     (id,    int,               0)
-    (name,  std::string,      "")
+    (name,  std::string,  "none")
     (age,   int,               0)
     (code,  int,            1024)
 )
@@ -207,11 +207,16 @@ TEST_CASE("10-3", "[tmp]")
 {
 }
 
+#undef NAMED_PARAM
+#undef NAMED_PARAM_get_name_field
+#undef NAMED_PARAM_to_tuple_seq
+#undef NAMED_PARAM_declare_tag_type
+#undef NAMED_PARAM_default_value
+#undef NAMED_PARAM_value_type
+#undef NAMED_PARAM_tag_type
+#undef NAMED_PARAM_name
+
 #undef CREATE_PLACEHOLDER_FILLER_1_END
 #undef CREATE_PLACEHOLDER_FILLER_0_END
 #undef CREATE_PLACEHOLDER_FILLER_1
 #undef CREATE_PLACEHOLDER_FILLER_0
-
-#undef NAMED_PARAM
-#undef NAMED_PARAM_name
-#undef NAMED_PARAM_tag
