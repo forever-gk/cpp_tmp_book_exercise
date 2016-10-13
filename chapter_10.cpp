@@ -127,10 +127,8 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
 
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-struct wrap
-{
-    T value;
-};
+struct wrap : T
+{ };
 
 #define CREATE_PLACEHOLDER_FILLER_0(...)  \
             ((__VA_ARGS__)) CREATE_PLACEHOLDER_FILLER_1
@@ -142,6 +140,7 @@ struct wrap
 #define NAMED_PARAM_tag(r, data, elem)                                      \
         struct BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag) {           \
             static BOOST_PP_TUPLE_ELEM(1, elem) const default_value;        \
+            BOOST_PP_TUPLE_ELEM(1, elem) value { default_value };           \
         };                                                                  \
         BOOST_PP_TUPLE_ELEM(1, elem) const                                  \
             BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)::default_value \
