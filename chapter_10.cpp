@@ -63,10 +63,10 @@ TEST_CASE("sequence size", "[Boost.Preprocessor]")
 // refer to the following link to implement BOOST_FUSION_ADAPT_STRUCT-like macros.
 // http://stackoverflow.com/questions/24309309/how-to-use-boost-preprocessor-to-generate-accessors/24312646#24312646
 
-#define CREATE_MY_MACRO_PLACEHOLDER_FILLER_0(X, Y, Z)  \
-            ((X, Y, Z)) CREATE_MY_MACRO_PLACEHOLDER_FILLER_1
-#define CREATE_MY_MACRO_PLACEHOLDER_FILLER_1(X, Y, Z)  \
-            ((X, Y, Z)) CREATE_MY_MACRO_PLACEHOLDER_FILLER_0
+#define CREATE_MY_MACRO_PLACEHOLDER_FILLER_0(...)  \
+            ((__VA_ARGS__)) CREATE_MY_MACRO_PLACEHOLDER_FILLER_1
+#define CREATE_MY_MACRO_PLACEHOLDER_FILLER_1(...)  \
+            ((__VA_ARGS__)) CREATE_MY_MACRO_PLACEHOLDER_FILLER_0
 #define CREATE_MY_MACRO_PLACEHOLDER_FILLER_0_END
 #define CREATE_MY_MACRO_PLACEHOLDER_FILLER_1_END
 
@@ -85,6 +85,16 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
                     )
                 );
     REQUIRE(3 == size);
+
+    auto size1 = BOOST_PP_SEQ_SIZE(
+                    SEQ_of_tuple(
+                        "seq",
+                        (a)
+                        (d, e)
+                        (name, std::string, "")
+                    )
+                 );
+    REQUIRE(3 == size1);
 }
 
 #undef SEQ_of_tuple
