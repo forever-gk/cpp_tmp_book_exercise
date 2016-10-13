@@ -177,6 +177,11 @@ struct wrap : T
                                     boost::mpl::placeholders::_1                    \
                                 >                                                   \
                             >::type;                                                \
+            template <typename Tag, typename T, typename U>                         \
+            auto & get(Tag, boost::mpl::inherit2<T, U> & t)                         \
+            {                                                                       \
+                return static_cast<wrap<Tag> &>(t).value;                           \
+            }                                                                       \
         }
 
 
@@ -190,7 +195,6 @@ NAMED_PARAM(
 
 TEST_CASE("10-3", "[tmp]")
 {
-
 }
 
 #undef CREATE_PLACEHOLDER_FILLER_1_END
