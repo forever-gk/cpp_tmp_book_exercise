@@ -2,7 +2,7 @@
     "configurations": [
         {
             "name": "Mac",
-            "includePath": ["/usr/include", "/Users/gilhojang/GitHub/boost_1_60_0"],
+            "includePath": ["/usr/include", "/Users/gilhojang/GitHub/boost_1_62_0"],
             "browse" : {
                 "limitSymbolsToIncludedHeaders" : true,
                 "databaseFilename" : ""
