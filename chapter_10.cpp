@@ -144,7 +144,7 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
 #define CREATE_PLACEHOLDER_FILLER_0_END
 #define CREATE_PLACEHOLDER_FILLER_1_END
 
-#define NAMED_PARAM_tag(r, data, elem)                                      \
+#define NAMED_PARAM_declare_tag_type(r, data, elem)                         \
         struct BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag) {           \
             static BOOST_PP_TUPLE_ELEM(1, elem) const default_value;        \
             BOOST_PP_TUPLE_ELEM(1, elem) value { default_value };           \
@@ -155,35 +155,38 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
         static wrap<BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)> const \
                 BOOST_PP_TUPLE_ELEM(0, elem) { };
 
-#define NAMED_PARAM_name(s, data, elem) \
+#define NAMED_PARAM_to_tuple_seq(param) \
+        BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)
+
+#define NAMED_PARAM_get_name(s, data, elem) \
         BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)
 
-#define NAMED_PARAM(ns, param)                                                      \
-        namespace ns                                                                \
-        {                                                                           \
-            BOOST_PP_SEQ_FOR_EACH(                                                  \
-                NAMED_PARAM_tag,                                                    \
-                ~,                                                                  \
-                BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)               \
-            )                                                                       \
-            using tags_t                                                            \
-                = boost::mpl::vector<                                               \
-                    BOOST_PP_SEQ_ENUM(                                              \
-                        BOOST_PP_SEQ_TRANSFORM(                                     \
-                            NAMED_PARAM_name,                                       \
-                            ~,                                                      \
-                            BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)   \
-                        )                                                           \
-                    )                                                               \
-                  >;                                                                \
-            using tuple_t                                                           \
-                = typename boost::mpl::inherit_linearly<                            \
-                                tags_t,                                             \
-                                boost::mpl::inherit<                                \
-                                    wrap<boost::mpl::placeholders::_2>,             \
-                                    boost::mpl::placeholders::_1                    \
-                                >                                                   \
-                            >::type;                                                \
+#define NAMED_PARAM(ns, param)                                              \
+        namespace ns                                                        \
+        {                                                                   \
+            BOOST_PP_SEQ_FOR_EACH(                                          \
+                NAMED_PARAM_declare_tag_type,                               \
+                ~,                                                          \
+                NAMED_PARAM_to_tuple_seq(param)                             \
+            )                                                               \
+            using tags_t                                                    \
+                = boost::mpl::vector<                                       \
+                    BOOST_PP_SEQ_ENUM(                                      \
+                        BOOST_PP_SEQ_TRANSFORM(                             \
+                            NAMED_PARAM_get_name,                           \
+                            ~,                                              \
+                            NAMED_PARAM_to_tuple_seq(param)                 \
+                        )                                                   \
+                    )                                                       \
+                  >;                                                        \
+            using tuple_t                                                   \
+                = typename boost::mpl::inherit_linearly<                    \
+                                tags_t,                                     \
+                                boost::mpl::inherit<                        \
+                                    wrap<boost::mpl::placeholders::_2>,     \
+                                    boost::mpl::placeholders::_1            \
+                                >                                           \
+                            >::type;                                        \
         }
 
 
