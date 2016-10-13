@@ -3,9 +3,16 @@
 #define BOOST_PP_VARIADICS 1
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/size.hpp>
+#include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/seq/transform.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
+
+#include <boost/mpl/placeholders.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/inherit.hpp>
+#include <boost/mpl/inherit_linearly.hpp>
 
 
 #define SEQ_size(prefix, seq) BOOST_PP_SEQ_SIZE(seq)
@@ -119,6 +126,12 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
 
 
 ////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct wrap
+{
+    T value;
+};
+
 #define CREATE_PLACEHOLDER_FILLER_0(...)  \
             ((__VA_ARGS__)) CREATE_PLACEHOLDER_FILLER_1
 #define CREATE_PLACEHOLDER_FILLER_1(...)  \
@@ -132,17 +145,40 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
         };                                                                  \
         BOOST_PP_TUPLE_ELEM(1, elem) const                                  \
             BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)::default_value \
-                { BOOST_PP_TUPLE_ELEM(2, elem) };
+                { BOOST_PP_TUPLE_ELEM(2, elem) };                           \
+        static wrap<BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)> const \
+                BOOST_PP_TUPLE_ELEM(0, elem) { };
 
-#define NAMED_PARAM(ns, param)                                              \
-            namespace ns                                                    \
-            {                                                               \
-                BOOST_PP_SEQ_FOR_EACH(                                      \
-                    NAMED_PARAM_tag,                                        \
-                    ~,                                                      \
-                    BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)   \
-                )                                                           \
-            }
+#define NAMED_PARAM_name(s, data, elem) \
+        BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(0, elem), _tag)
+
+#define NAMED_PARAM(ns, param)                                                      \
+        namespace ns                                                                \
+        {                                                                           \
+            BOOST_PP_SEQ_FOR_EACH(                                                  \
+                NAMED_PARAM_tag,                                                    \
+                ~,                                                                  \
+                BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)               \
+            )                                                                       \
+            using tags_t                                                            \
+                = boost::mpl::vector<                                               \
+                    BOOST_PP_SEQ_ENUM(                                              \
+                        BOOST_PP_SEQ_TRANSFORM(                                     \
+                            NAMED_PARAM_name,                                       \
+                            ~,                                                      \
+                            BOOST_PP_CAT(CREATE_PLACEHOLDER_FILLER_0 param, _END)   \
+                        )                                                           \
+                    )                                                               \
+                  >;                                                                \
+            using tuple_t                                                           \
+                = typename boost::mpl::inherit_linearly<                            \
+                                tags_t,                                             \
+                                boost::mpl::inherit<                                \
+                                    wrap<boost::mpl::placeholders::_2>,             \
+                                    boost::mpl::placeholders::_1                    \
+                                >                                                   \
+                            >::type;                                                \
+        }
 
 
 NAMED_PARAM(
@@ -163,6 +199,6 @@ TEST_CASE("10-3", "[tmp]")
 #undef CREATE_PLACEHOLDER_FILLER_1
 #undef CREATE_PLACEHOLDER_FILLER_0
 
-#undef NAMED_PARAM_tag
-
 #undef NAMED_PARAM
+#undef NAMED_PARAM_name
+#undef NAMED_PARAM_tag
