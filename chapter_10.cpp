@@ -128,7 +128,12 @@ TEST_CASE("tuple sequence", "[Boost.Preprocessor]")
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct wrap : T
-{ };
+{
+    auto operator = (typename T::value_type const& rhs) const
+    {
+        return wrap<T>{ rhs };
+    }
+};
 
 template <typename Tag, typename T, typename U>
 auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
@@ -153,6 +158,7 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
         struct NAMED_PARAM_tag_type(elem) {                             \
             static NAMED_PARAM_value_type(elem) const default_value;    \
             NAMED_PARAM_value_type(elem) value { default_value };       \
+            using value_type = NAMED_PARAM_value_type(elem);            \
         };                                                              \
         NAMED_PARAM_value_type(elem) const                              \
             NAMED_PARAM_tag_type(elem)::default_value                   \
@@ -192,6 +198,20 @@ auto & get(wrap<Tag>, boost::mpl::inherit2<T, U> & t)
                                     boost::mpl::placeholders::_1            \
                                 >                                           \
                             >::type;                                        \
+            template <typename T, typename U>                               \
+            auto operator , (wrap<T> && lhs, wrap<U> && rhs)                \
+            {                                                               \
+                tuple_t t;                                                  \
+                get(lhs, t) = std::move(lhs.value);                         \
+                ght(rhs, t) = std::move(rhs.value);                         \
+                return t;                                                   \
+            }                                                               \
+            template <typename T>                                           \
+            auto operator , (tuple_t && lhs, wrap<T> && rhs)                \
+            {                                                               \
+                get(rhs, lhs) = std::move(rhs.value);                       \
+                return std::move(lhs);                                      \
+            }                                                               \
         }
 
 
