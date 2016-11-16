@@ -1,6 +1,5 @@
 #include "catch.hpp"
 
-#define BOOST_PP_VARIADICS 1
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/size.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
