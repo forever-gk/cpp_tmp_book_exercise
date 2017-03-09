@@ -32,11 +32,7 @@ TEST_CASE("2-0", "[tmp]")
 template <typename T, typename SourceType, typename TargetType>
 struct replace_type
 {
-    // NOTE: this primary template will be selected when T and SourceType is different.
-    static_assert(
-            std::is_same<T, SourceType>(),
-            "T and SourceType should be same type, or SourceType should be part of compound type T."
-    );
+    using type = T;
 };
 
 template <typename T, typename SourceType, typename TargetType>
@@ -63,7 +59,8 @@ struct replace_type<S * [N], S, T>
 template <typename R, typename... Arg, typename S, typename T>
 struct replace_type<R (*) (Arg...), S, T>
 {
-    using type = T (*) (replace_type_t<Arg, S, T>...);
+    using ret_t = replace_type_t<R, S, T>;
+    using type = ret_t (*) (replace_type_t<Arg, S, T>...);
 };
 
 TEST_CASE("2-1", "[tmp]")
@@ -95,6 +92,13 @@ TEST_CASE("2-1", "[tmp]")
             is_same<
                     long & (*) (long &, long &),
                     replace_type_t<char & (*) (char &, char &), char &, long &>
+            >(),
+            ""
+    );
+    static_assert(
+            std::is_same<
+                    long (*) (double &, long),
+                    replace_type_t<float & (*) (double &, float &), float &, long>
             >(),
             ""
     );
