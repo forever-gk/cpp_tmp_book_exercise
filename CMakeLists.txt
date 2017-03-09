@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.5.2)
 project(cpp_tmp_book_exercise)
 
-set(BOOST_ROOT "../boost_1_62_0")
-find_package(Boost 1.62.0)
+set(BOOST_ROOT "../boost_1_63_0")
+find_package(Boost 1.63.0)
 if(Boost_FOUND)
     include_directories(${BOOST_ROOT})
 else()
